@@ -30,7 +30,7 @@ public class NavigationBarPanel extends JPanel {
             btn.setFocusPainted(false);       // removes focus border on click
         }
 
-        add(backBtn);
+        //add(backBtn);
         add(homeBtn);
         add(logoutBtn);
     }

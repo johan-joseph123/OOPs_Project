@@ -1,5 +1,5 @@
 // Create new file: ui/ViewAllRidesPanel.java
-package ui;
+/*package ui;
 
 import javax.swing.*;
 import java.awt.*;
@@ -37,4 +37,4 @@ public class ViewAllRidesPanel extends JPanel {
         card.add(new JLabel(" Vehicle: " + ride.getVehicleType()));
         return card;
     }
-}
+}*/

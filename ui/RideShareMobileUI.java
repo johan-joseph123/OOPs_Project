@@ -35,28 +35,21 @@ public class RideShareMobileUI extends JFrame {
         
         AdminHomePanel admin = new AdminHomePanel(this);
         ApplicationVerificationPanel verify = new ApplicationVerificationPanel(this);
-     // In RideShareMobileUI.java constructor:
-     // ... after existing panel instantiations
-
-     // New Sign-Up Panels
+     
      SignUpChoicePanel signUpChoicePanel = new SignUpChoicePanel(this);
      DriverSignUpPanel driverSignUpPanel = new DriverSignUpPanel(this);
      RiderSignUpPanel riderSignUpPanel = new RiderSignUpPanel(this);
 
-     // New Admin Panels
-     ViewUsersPanel viewUsersPanel = new ViewUsersPanel(this);
-     ViewAllRidesPanel viewAllRidesPanel = new ViewAllRidesPanel(this);
+     //ViewUsersPanel viewUsersPanel = new ViewUsersPanel(this);
+     //ViewAllRidesPanel viewAllRidesPanel = new ViewAllRidesPanel(this);
 
-     // ... after existing mainPanel.add() calls
-
-     // Add new sign-up panels
      mainPanel.add(signUpChoicePanel, "signup_choice");
      mainPanel.add(driverSignUpPanel, "driver_signup");
      mainPanel.add(riderSignUpPanel, "rider_signup");
 
      // Add new admin panels
-     mainPanel.add(viewUsersPanel, "view_users");
-     mainPanel.add(viewAllRidesPanel, "view_rides");
+     //mainPanel.add(viewUsersPanel, "view_users");
+    // mainPanel.add(viewAllRidesPanel, "view_rides");
         mainPanel.add(userhomePanel, "userhome");
         mainPanel.add(providerHome,"providerhome");
         mainPanel.add(searchPanel, "search");

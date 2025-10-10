@@ -44,7 +44,7 @@ public class AdminHomePanel extends JPanel {
 
         // Add action listeners
         verifyApplicationsBtn.addActionListener(e -> ui.showScreen("verify"));
-        viewUsersBtn.addActionListener(e -> ui.showScreen("view_users"));
-        viewRidesBtn.addActionListener(e -> ui.showScreen("view_rides"));
+        //viewUsersBtn.addActionListener(e -> ui.showScreen("view_users"));
+       // viewRidesBtn.addActionListener(e -> ui.showScreen("view_rides"));
     }
 }

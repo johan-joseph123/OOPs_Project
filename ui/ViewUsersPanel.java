@@ -1,5 +1,5 @@
 // Create new file: ui/ViewUsersPanel.java
-package ui;
+/*package ui;
 
 import javax.swing.*;
 import java.awt.*;
@@ -28,4 +28,4 @@ public class ViewUsersPanel extends JPanel {
         add(driversPanel);
         add(ridersPanel);
     }
-}
+}*/
