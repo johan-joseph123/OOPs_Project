@@ -7,30 +7,60 @@ public class NavigationBarPanel extends JPanel {
     private final JButton backBtn;
     private final JButton homeBtn;
     private final JButton logoutBtn;
+    private boolean loggedIn = false;
+
+    public void setLoggedIn(boolean status) {
+        this.loggedIn = status;
+    }
 
     public NavigationBarPanel(RideShareMobileUI ui) {
-        setLayout(new FlowLayout(FlowLayout.CENTER, 30, 10));
-        setBackground(new Color(230, 230, 230));
+        setLayout(new FlowLayout(FlowLayout.CENTER, 25, 10));
+        setBackground(new Color(52, 152, 219)); // same blue as signup header
 
-        backBtn = new JButton("← Back");
-        homeBtn = new JButton("🏠 Home");
-        logoutBtn = new JButton("👤 Logout");
+        // ===== Buttons =====
+        backBtn = new JButton("Back");
+        homeBtn = new JButton(" Home");
+        logoutBtn = new JButton("Logout");
 
-        backBtn.addActionListener(e -> ui.goBack());
-        
-        homeBtn.addActionListener(e -> ui.showScreen("userhome"));
-        
-        logoutBtn.addActionListener(e -> ui.showScreen("login"));
+        // ===== Common Button Styling =====
+        Font btnFont = new Font("Segoe UI", Font.BOLD, 13);
+        Color btnColor = Color.WHITE;
 
-        // Style buttons
         for (JButton btn : new JButton[]{backBtn, homeBtn, logoutBtn}) {
-            btn.setBorderPainted(false);
-            btn.setOpaque(false);
-            btn.setContentAreaFilled(false);  // also hides default background fill
-            btn.setFocusPainted(false);       // removes focus border on click
+            btn.setFont(btnFont);
+            btn.setForeground(btnColor);
+            btn.setFocusPainted(false);
+            btn.setBackground(new Color(41, 128, 185));
+            btn.setBorder(BorderFactory.createEmptyBorder(6, 15, 6, 15));
+            btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         }
 
-        //add(backBtn);
+        // ===== Button Actions =====
+        backBtn.addActionListener(e -> ui.goBack());
+
+        homeBtn.addActionListener(e -> {
+            if (ui.isLoggedIn()) {   // ✅ check from main UI instead of local variable
+                ui.showScreen("userhome");
+            } else {
+                JOptionPane.showMessageDialog(this,
+                    "Please login or sign up first!",
+                    "Access Denied", JOptionPane.WARNING_MESSAGE);
+                ui.showScreen("login");
+            }
+        });
+
+        logoutBtn.addActionListener(e -> {
+            if (ui.isLoggedIn()) {
+                ui.setLoggedIn(false);
+                JOptionPane.showMessageDialog(this, "You have logged out successfully.");
+                ui.showScreen("login");
+            } else {
+                JOptionPane.showMessageDialog(this, "You are not logged in!", "Logout Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        // ===== Add Buttons to Navigation Bar =====
+        add(backBtn);
         add(homeBtn);
         add(logoutBtn);
     }
@@ -44,3 +74,4 @@ public class NavigationBarPanel extends JPanel {
         backBtn.setVisible(!(isLoginOrSignup || isUserHome));
     }
 }
+

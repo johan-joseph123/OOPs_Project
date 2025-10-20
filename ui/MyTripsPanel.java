@@ -2,54 +2,46 @@ package ui;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.List;
-import java.util.ArrayList;
 
 public class MyTripsPanel extends JPanel {
     private final RideShareMobileUI parent;
     private final JPanel tripListPanel;
-    private final List<Ride> myRides;
 
     public MyTripsPanel(RideShareMobileUI parent) {
         this.parent = parent;
-        this.myRides = new ArrayList<>();
         setLayout(new BorderLayout());
-        setBackground(Color.WHITE);
+        setBackground(new Color(240, 245, 255));
 
-        JLabel title = new JLabel("My Trips", SwingConstants.CENTER);
-        title.setFont(new Font("Arial", Font.BOLD, 20));
-        title.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+        JLabel title = new JLabel("🧭 My Trips", SwingConstants.CENTER);
+        title.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        title.setBorder(BorderFactory.createEmptyBorder(12,0,12,0));
         add(title, BorderLayout.NORTH);
 
         tripListPanel = new JPanel();
         tripListPanel.setLayout(new BoxLayout(tripListPanel, BoxLayout.Y_AXIS));
-        tripListPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        tripListPanel.setBackground(new Color(240,245,255));
+        tripListPanel.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
 
-        JScrollPane scrollPane = new JScrollPane(tripListPanel);
-        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        add(scrollPane, BorderLayout.CENTER);
+        JScrollPane scroll = new JScrollPane(tripListPanel);
+        add(scroll, BorderLayout.CENTER);
 
-        updateTripList(); // Initial draw
+        updateTripList();
     }
 
-    public void addRide(Ride ride) {
-        myRides.add(ride);
-        // The update is typically done when the screen is shown by the main UI class,
-        // but we can call it here for immediate effect if needed.
-    }
-
+    // call this from RideShareMobileUI.showScreen("trips") to refresh
     public void updateTripList() {
         tripListPanel.removeAll();
 
-        if (myRides.isEmpty()) {
-            JLabel noTripsLabel = new JLabel("No trips booked or offered yet. Start a ride!");
-            noTripsLabel.setAlignmentX(CENTER_ALIGNMENT);
+        if (ApplicationData.myTrips.isEmpty()) {
+            JLabel lbl = new JLabel("No trips yet.");
+            lbl.setFont(new Font("Segoe UI", Font.ITALIC, 14));
+            lbl.setAlignmentX(Component.CENTER_ALIGNMENT);
             tripListPanel.add(Box.createVerticalGlue());
-            tripListPanel.add(noTripsLabel);
+            tripListPanel.add(lbl);
             tripListPanel.add(Box.createVerticalGlue());
         } else {
-            for (Ride ride : myRides) {
-                tripListPanel.add(createTripItem(ride));
+            for (Ride r : ApplicationData.myTrips) {
+                tripListPanel.add(createTripCard(r));
                 tripListPanel.add(Box.createVerticalStrut(10));
             }
         }
@@ -58,20 +50,39 @@ public class MyTripsPanel extends JPanel {
         repaint();
     }
 
-    private JPanel createTripItem(Ride ride) {
-        JPanel ridePanel = new JPanel(new GridLayout(0, 1));
-        ridePanel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1),
-            BorderFactory.createEmptyBorder(10, 10, 10, 10)
+    private JPanel createTripCard(Ride r) {
+        JPanel card = new JPanel(new BorderLayout());
+        card.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(210,220,255), 1),
+                BorderFactory.createEmptyBorder(10,10,10,10)
         ));
-        ridePanel.setBackground(new Color(245, 245, 245)); // Light background for list item
-        ridePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100)); // Constrain vertical size
+        card.setBackground(Color.WHITE);
 
-        ridePanel.add(new JLabel("📍 Pickup: " + ride.getPlace() + " (" + ride.getRoute() + ")"));
-        ridePanel.add(new JLabel("🕒 Time: " + ride.getTime()));
-        ridePanel.add(new JLabel("🚗 Vehicle: " + ride.getVehicleType()));
-        ridePanel.add(new JLabel("👥 Seats: " + ride.getSeats()));
+        JLabel info = new JLabel("<html><b>" + r.getDriverName() + "</b> — " + r.getRoute() +
+                                 "<br/>" + r.getDate() + " " + r.getTime() + " • Seats: " + r.getSeatsAvailable() +
+                                 " • " + r.getVehicleType() + "</html>");
+        card.add(info, BorderLayout.CENTER);
 
-        return ridePanel;
+        JPanel right = new JPanel(new GridLayout(2,1,6,6));
+        right.setOpaque(false);
+
+        JLabel status = new JLabel(r.getStatus(), SwingConstants.CENTER);
+        status.setForeground(switch (r.getStatus()) {
+            case "Completed" -> new Color(40,160,40);
+            case "Accepted by Rider" -> new Color(80,120,200);
+            default -> Color.DARK_GRAY;
+        });
+        right.add(status);
+
+        JButton completeBtn = new JButton("Mark Completed");
+        completeBtn.addActionListener(e -> {
+            ApplicationData.completeRide(r);
+            JOptionPane.showMessageDialog(this, "Ride marked as completed.");
+            updateTripList();
+        });
+        right.add(completeBtn);
+
+        card.add(right, BorderLayout.EAST);
+        return card;
     }
 }

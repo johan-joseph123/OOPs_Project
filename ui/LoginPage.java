@@ -16,11 +16,12 @@ public class LoginPage extends JPanel {
 
     public LoginPage(RideShareMobileUI ui) {
         setLayout(new BorderLayout());
-        setBackground(Color.WHITE);
+        setBackground(new Color(245, 245, 245)); // light gray background
 
-        JLabel title = new JLabel("Login", SwingConstants.CENTER);
-        title.setFont(new Font("Arial", Font.BOLD, 20));
-        title.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
+        JLabel title = new JLabel(" RideShare Login", SwingConstants.CENTER);
+        title.setFont(new Font("Arial", Font.BOLD, 24));
+        title.setForeground(new Color(0, 102, 204)); // blue text
+        title.setBorder(BorderFactory.createEmptyBorder(30, 0, 20, 0));
         add(title, BorderLayout.NORTH);
 
         JPanel loginPanel = initComponents(ui);
@@ -28,43 +29,72 @@ public class LoginPage extends JPanel {
     }
 
     private JPanel initComponents(RideShareMobileUI ui) {
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBackground(Color.WHITE);
+        JPanel cardPanel = new JPanel(new GridBagLayout());
+        cardPanel.setBackground(Color.WHITE);
+        cardPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
+                BorderFactory.createEmptyBorder(30, 40, 30, 40)
+        ));
+
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         JLabel userLabel = new JLabel("Username:");
+        userLabel.setFont(new Font("Arial", Font.BOLD, 14));
+
         usernameField = new JTextField(15);
+        usernameField.setFont(new Font("Arial", Font.PLAIN, 14));
+        usernameField.setBorder(BorderFactory.createLineBorder(new Color(180, 180, 180)));
+        usernameField.addActionListener(e -> passwordField.requestFocusInWindow());
 
         JLabel passLabel = new JLabel("Password:");
+        passLabel.setFont(new Font("Arial", Font.BOLD, 14));
+
         passwordField = new JPasswordField(15);
+        passwordField.setFont(new Font("Arial", Font.PLAIN, 14));
+        passwordField.setBorder(BorderFactory.createLineBorder(new Color(180, 180, 180)));
+        passwordField.addActionListener(e -> performLogin(ui));
 
         loginButton = new JButton("Login");
-        loginButton.setFont(new Font("Arial", Font.BOLD, 14));
-        signUpButton = new JButton("SignUp");
-        signUpButton.setFont(new Font("Arial", Font.PLAIN, 14));
+        loginButton.setFont(new Font("Arial", Font.BOLD, 15));
+        loginButton.setForeground(Color.WHITE);
+        loginButton.setBackground(new Color(0, 102, 204));
+        loginButton.setFocusPainted(false);
+        loginButton.setBorder(BorderFactory.createEmptyBorder(8, 20, 8, 20));
 
-        // Layout
-        gbc.gridx = 0; gbc.gridy = 0; panel.add(userLabel, gbc);
-        gbc.gridx = 1; panel.add(usernameField, gbc);
+        signUpButton = new JButton("Create an Account");
+        signUpButton.setFont(new Font("Arial", Font.PLAIN, 13));
+        signUpButton.setForeground(new Color(0, 102, 204));
+        signUpButton.setBackground(Color.WHITE);
+        signUpButton.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        signUpButton.setFocusPainted(false);
 
-        gbc.gridx = 0; gbc.gridy = 1; panel.add(passLabel, gbc);
-        gbc.gridx = 1; panel.add(passwordField, gbc);
+        // Layout setup
+        gbc.gridx = 0; gbc.gridy = 0; cardPanel.add(userLabel, gbc);
+        gbc.gridx = 1; cardPanel.add(usernameField, gbc);
 
-        gbc.gridx = 1; gbc.gridy = 2; gbc.anchor = GridBagConstraints.CENTER;
-        gbc.insets = new Insets(20, 8, 8, 8);
-        panel.add(loginButton, gbc);
+        gbc.gridx = 0; gbc.gridy = 1; cardPanel.add(passLabel, gbc);
+        gbc.gridx = 1; cardPanel.add(passwordField, gbc);
+
+        gbc.gridx = 1; gbc.gridy = 2;
+        gbc.insets = new Insets(20, 10, 5, 10);
+        cardPanel.add(loginButton, gbc);
 
         gbc.gridy++;
-        signUpButton.setBackground(getBackground());
-        signUpButton.setBorderPainted(false);
-        panel.add(signUpButton, gbc);
+        gbc.insets = new Insets(5, 10, 10, 10);
+        cardPanel.add(signUpButton, gbc);
 
+        // Button actions
         loginButton.addActionListener(e -> performLogin(ui));
         signUpButton.addActionListener(e -> ui.showScreen("signup_choice"));
 
-        return panel;
+        // Center alignment container
+        JPanel container = new JPanel(new GridBagLayout());
+        container.setBackground(new Color(245, 245, 245));
+        container.add(cardPanel);
+
+        return container;
     }
 
     private void performLogin(RideShareMobileUI ui) {
@@ -87,41 +117,46 @@ public class LoginPage extends JPanel {
                 String role = rs.getString("role");
                 String id = rs.getString("id");
 
-                if (role.equals("admin")) {
+                switch (role) {
+                case "admin" -> {
                     JOptionPane.showMessageDialog(this, "Admin login successful!");
+                    ui.setLoggedIn(true); // ✅ added
                     ui.showScreen("admin");
-                } 
-                else if (role.equals("rider")) {
-                    JOptionPane.showMessageDialog(this, "Rider login successful!");
-                    ui.showScreen("userhome");
-                } 
-                else if (role.equals("driver")) {
-                    // Check if driver is approved
-                    String check = "SELECT status FROM driver_applications WHERE id = ?";
-                    PreparedStatement ps2 = con.prepareStatement(check);
-                    ps2.setString(1, id);
-                    ResultSet rs2 = ps2.executeQuery();
+                }
 
-                    if (rs2.next()) {
-                        String status = rs2.getString("status");
-                        if (status.equals("approved")) {
-                            JOptionPane.showMessageDialog(this, "Driver login successful!");
-                            ui.showScreen("providerhome");
-                        } else {
-                            JOptionPane.showMessageDialog(this, "Your application is " + status + ". Please wait for admin approval.");
-                        }
-                    } else {
-                        JOptionPane.showMessageDialog(this, "No driver application found.");
+                    case "rider" -> {
+                        JOptionPane.showMessageDialog(this, "Rider login successful!");
+                        ui.setLoggedIn(true); // ✅ mark as logged in
+                        ui.showScreen("userhome");
+                        
                     }
-                    rs2.close();
-                    ps2.close();
+                    case "driver" -> {
+                        String check = "SELECT status FROM driver_applications WHERE id = ?";
+                        PreparedStatement ps2 = con.prepareStatement(check);
+                        ps2.setString(1, id);
+                        ResultSet rs2 = ps2.executeQuery();
+
+                        if (rs2.next()) {
+                            String status = rs2.getString("status");
+                            if (status.equals("approved")) {
+                                JOptionPane.showMessageDialog(this, "Driver login successful!");
+                                ui.setLoggedIn(true); // ✅ added
+                                ui.showScreen("providerhome");
+                            }
+                            else {
+                                JOptionPane.showMessageDialog(this, "Your application is " + status + ". Please wait for admin approval.");
+                            }
+                        } else {
+                            JOptionPane.showMessageDialog(this, "No driver application found.");
+                        }
+                        rs2.close();
+                        ps2.close();
+                    }
                 }
             } else {
                 JOptionPane.showMessageDialog(this, "Invalid credentials!", "Login Failed", JOptionPane.ERROR_MESSAGE);
             }
 
-            rs.close();
-            ps.close();
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(this, "Database error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }

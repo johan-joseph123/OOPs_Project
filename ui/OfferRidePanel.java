@@ -2,136 +2,127 @@ package ui;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 public class OfferRidePanel extends JPanel {
-    
-    private final RideShareMobileUI ui; // Made final and accessible
-    private JLabel imageLabel;
+    private final RideShareMobileUI ui;
+    private JTextField driverNameField;
     private JTextField seatsField;
-    private JTextField numberField;
-    private JComboBox<String> placeDropdown;
+    private JComboBox<String> fromDropdown;
+    private JComboBox<String> toDropdown;
     private JTextField timeField;
     private JComboBox<String> vehicleTypeDropdown;
+    private JComboBox<String> dateDropdown;
 
     public OfferRidePanel(RideShareMobileUI ui) {
-        this.ui = ui; // Store the reference
-        
+        this.ui = ui;
         setLayout(new GridBagLayout());
+        setBackground(new Color(240, 245, 255));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(8, 8, 8, 8);
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0; // Ensures components expand horizontally
-        
-        JLabel title = new JLabel("Offer a Ride", SwingConstants.CENTER);
-        title.setFont(new Font("Arial", Font.BOLD, 20));
-        gbc.gridwidth = 2; // Span two columns
-        gbc.gridx = 0;
-        gbc.gridy = 0;
+
+        JLabel title = new JLabel("🚗 Offer a Ride", SwingConstants.CENTER);
+        title.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        gbc.gridwidth = 2;
+        gbc.gridx = 0; gbc.gridy = 0;
         add(title, gbc);
-        
-        gbc.gridwidth = 1; // Reset to single column
-        gbc.gridy++;
-        
-        // 1. Upload vehicle photo
-        JButton uploadButton = new JButton("Upload Vehicle Photo");
-        imageLabel = new JLabel("No file chosen", SwingConstants.CENTER);
-        gbc.gridx = 0;
-        gbc.gridy++;
-        add(uploadButton, gbc);
-        gbc.gridy++;
-        add(imageLabel, gbc);
 
-        uploadButton.addActionListener(e -> chooseImage());
+        gbc.gridwidth = 1;
         gbc.gridy++;
-        add(new JLabel("number plate number:"), gbc);
-        gbc.gridy++;
-        numberField = new JTextField(10);
-        add(numberField, gbc);
-        
-        
-        gbc.gridy++;
-        add(new JLabel("Available Seats:"), gbc);
-        gbc.gridy++;
-        seatsField = new JTextField(10);
-        add(seatsField, gbc);
 
-        // 3. Drop-down of places
+        // Driver Name
+        add(new JLabel("Driver Name:"), gbc);
         gbc.gridy++;
-        add(new JLabel("Select Place (Destination):"), gbc);
-        gbc.gridy++;
-        String[] places = {"Bharananganam", "Pala KSRTC", "Pravithanam", "Kottayam RS"};
-        placeDropdown = new JComboBox<>(places);
-        add(placeDropdown, gbc);
+        driverNameField = new JTextField(15);
+        add(driverNameField, gbc);
 
-        // 4. Time box
+        // From
         gbc.gridy++;
-        add(new JLabel("Pickup Time (HH:mm):"), gbc);
+        add(new JLabel("From:"), gbc);
         gbc.gridy++;
-        timeField = new JTextField("14:00", 10);
+        fromDropdown = new JComboBox<>(new String[]{"St. Joseph’s College", "Pala KSRTC", "Bharananganam"});
+        add(fromDropdown, gbc);
+
+        // To
+        gbc.gridy++;
+        add(new JLabel("To:"), gbc);
+        gbc.gridy++;
+        toDropdown = new JComboBox<>(new String[]{"Pravithanam", "Kottayam RS", "Pala KSRTC"});
+        add(toDropdown, gbc);
+
+        // Date
+        gbc.gridy++;
+        add(new JLabel("Date:"), gbc);
+        gbc.gridy++;
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
+        Calendar cal = Calendar.getInstance();
+        String today = sdf.format(cal.getTime());
+        cal.add(Calendar.DATE, 1);
+        String tomorrow = sdf.format(cal.getTime());
+        dateDropdown = new JComboBox<>(new String[]{today, tomorrow});
+        add(dateDropdown, gbc);
+
+        // Time
+        gbc.gridy++;
+        add(new JLabel("Time (HH:mm):"), gbc);
+        gbc.gridy++;
+        timeField = new JTextField("14:00");
         add(timeField, gbc);
 
-        // 5. Vehicle type dropdown
+        // Vehicle Type
         gbc.gridy++;
         add(new JLabel("Vehicle Type:"), gbc);
         gbc.gridy++;
-        String[] vehicleTypes = {"Car", "Bike", "Auto"};
-        vehicleTypeDropdown = new JComboBox<>(vehicleTypes);
+        vehicleTypeDropdown = new JComboBox<>(new String[]{"Car", "Bike", "Auto"});
         add(vehicleTypeDropdown, gbc);
 
-        // 6. Submit button
+        // Seats
         gbc.gridy++;
-        JButton submitButton = new JButton("Offer Ride");
-        gbc.ipady = 10; // Add some padding
+        add(new JLabel("Available Seats:"), gbc);
+        gbc.gridy++;
+        seatsField = new JTextField(5);
+        add(seatsField, gbc);
+
+        // Submit
+        gbc.gridy++;
+        JButton submitButton = new JButton("🚀 Offer Ride");
         add(submitButton, gbc);
 
         submitButton.addActionListener(e -> submitRide());
     }
 
-    private void chooseImage() {
-        JFileChooser fileChooser = new JFileChooser();
-        int option = fileChooser.showOpenDialog(this);
-        if (option == JFileChooser.APPROVE_OPTION) {
-            File selected = fileChooser.getSelectedFile();
-            imageLabel.setText(selected.getName());
-        }
-    }
-
     private void submitRide() {
-        String seatsText = seatsField.getText().trim();
-        String place = (String) placeDropdown.getSelectedItem();
-        String time = timeField.getText().trim();
-        String vehicleType = (String) vehicleTypeDropdown.getSelectedItem();
-        String image = imageLabel.getText();
-        int seats;
+        String driverName = (driverNameField != null) ? driverNameField.getText().trim() : "Driver";
+        String from = (fromDropdown != null) ? (String) fromDropdown.getSelectedItem() : "St. Joseph's College";
+        String to = (toDropdown != null) ? (String) toDropdown.getSelectedItem() : "";
+        String date = (dateDropdown != null) ? (String) dateDropdown.getSelectedItem() : "";
+        String time = (timeField != null) ? timeField.getText().trim() : "";
+        String vehicleType = (vehicleTypeDropdown != null) ? (String) vehicleTypeDropdown.getSelectedItem() : "";
+        String seatsText = (seatsField != null) ? seatsField.getText().trim() : "";
 
-        if (seatsText.isEmpty() || time.isEmpty() || place == null) {
-            JOptionPane.showMessageDialog(this, "Please fill all required fields.", "Error", JOptionPane.ERROR_MESSAGE);
+        if (driverName.isEmpty() || from.isEmpty() || to.isEmpty() || time.isEmpty() || seatsText.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please fill all fields.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
+        int seats;
         try {
             seats = Integer.parseInt(seatsText);
             if (seats <= 0) throw new NumberFormatException();
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Available Seats must be a positive number.", "Error", JOptionPane.ERROR_MESSAGE);
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Seats must be a positive integer.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        // Create the Ride object (Note: "You" as the name for the current user's offered ride)
-        // For the offered ride, the 'route' is the destination place.
-        Ride ride = new Ride("You", vehicleType, time, seats, place);
-        ui.addRideToMyTrips(ride);
+        Ride ride = new Ride(driverName, vehicleType, time, seats, from, to, date);
+        ApplicationData.addRide(ride);
 
-        JOptionPane.showMessageDialog(this,
-            "Ride Offered and added to My Trips!\n" +
-            "Destination: " + place + "\n" +
-            "Time: " + time,
-            "Success",
-            JOptionPane.INFORMATION_MESSAGE);
-        
-        // Navigate back to Home or My Trips
-        ui.showScreen("home");
+        JOptionPane.showMessageDialog(this, "Ride offered successfully!");
+        // If provider UI exists, go to providerhome; else go to userhome
+        ui.showScreen("providerhome");
     }
+
 }
