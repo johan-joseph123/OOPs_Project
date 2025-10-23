@@ -124,9 +124,9 @@ public class RideShareMobileUI extends JFrame {
         }
     }
 
-    public void addRideToMyTrips(Ride ride) {
+    /*public void addRideToMyTrips(Ride ride) {
         myTripsPanel.addRide(ride);
-    }
+    }*/
 
     // 🔹 Manage login state (for Home access control)
    
