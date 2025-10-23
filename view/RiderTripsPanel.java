@@ -27,6 +27,8 @@ public class RiderTripsPanel extends JPanel {
         title.setFont(new Font("Segoe UI", Font.BOLD, 22));
         title.setBorder(BorderFactory.createEmptyBorder(12, 0, 12, 0));
         add(title, BorderLayout.NORTH);
+        
+        
 
         tripListPanel = new JPanel();
         tripListPanel.setLayout(new BoxLayout(tripListPanel, BoxLayout.Y_AXIS));
