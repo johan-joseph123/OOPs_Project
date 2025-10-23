@@ -101,7 +101,7 @@ public class NavigationBarPanel extends JPanel {
         if (isUserHome || isDriverHome || isAdminHome) {
             backBtn.setVisible(false);
             homeBtn.setVisible(false);
-            logoutBtn.setVisible(true);
+            logoutBtn.setVisible(false);
         } else {
             backBtn.setVisible(true);
             homeBtn.setVisible(true);

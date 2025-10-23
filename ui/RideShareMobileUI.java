@@ -58,6 +58,7 @@ public class RideShareMobileUI extends JFrame {
         mainPanel = new JPanel(cardLayout);
 
         // ==== Screens ====
+        AdminDashboardPanel admin = new AdminDashboardPanel(this);
         ProviderHome providerHome = new ProviderHome(this);
         UserHomePanel userhomePanel = new UserHomePanel(this);
         SearchPanel searchPanel = new SearchPanel(this);
@@ -65,7 +66,7 @@ public class RideShareMobileUI extends JFrame {
         myTripsPanel = new MyTripsPanel(this);
         LoginPage loginPage = new LoginPage(this);
         OfferRidePanel offerRide = new OfferRidePanel(this);
-        AdminHomePanel admin = new AdminHomePanel(this);
+        //AdminHomePanel admin = new AdminHomePanel(this);
         ApplicationVerificationPanel verify = new ApplicationVerificationPanel(this);
 
         SignUpChoicePanel signUpChoicePanel = new SignUpChoicePanel(this);
@@ -73,6 +74,7 @@ public class RideShareMobileUI extends JFrame {
         RiderSignUpPanel riderSignUpPanel = new RiderSignUpPanel(this);
 
         // ==== Add Panels ====
+        mainPanel.add(admin, "admin");
         mainPanel.add(signUpChoicePanel, "signup_choice");
         mainPanel.add(driverSignUpPanel, "driver_signup");
         mainPanel.add(riderSignUpPanel, "rider_signup");
@@ -83,7 +85,7 @@ public class RideShareMobileUI extends JFrame {
         mainPanel.add(loginPage, "login");
         mainPanel.add(offerRide, "offer");
         mainPanel.add(myTripsPanel, "trips");
-        mainPanel.add(admin, "admin");
+        //mainPanel.add(admin, "admin");
         mainPanel.add(verify, "verify");
 
         // ==== Navigation Bar ====
