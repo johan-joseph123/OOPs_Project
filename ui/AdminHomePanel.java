@@ -38,22 +38,17 @@ public class AdminHomePanel extends JPanel {
         add(buttonPanel, BorderLayout.CENTER);
 
         // ===== Footer / Navigation =====
-        JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 40, 15));
-        navPanel.setBackground(new Color(245, 245, 245));
+        
 
-        JButton homeBtn = createNavButton(" Home");
-        JButton logoutBtn = createNavButton(" Logout");
+        
 
-        navPanel.add(homeBtn);
-        navPanel.add(logoutBtn);
-        add(navPanel, BorderLayout.SOUTH);
+       
 
         // ===== Action Listeners =====
         verifyApplicationsBtn.addActionListener(e -> ui.showScreen("verify"));
         viewUsersBtn.addActionListener(e -> ui.showScreen("view_users"));
         viewRidesBtn.addActionListener(e -> ui.showScreen("view_rides"));
-        homeBtn.addActionListener(e -> ui.showScreen("userhome"));
-        logoutBtn.addActionListener(e -> ui.showScreen("login"));
+        
     }
 
     // ===== Helper: Fancy Styled Button =====

@@ -30,6 +30,22 @@ public class RideShareMobileUI extends JFrame {
     private final MyTripsPanel myTripsPanel;
 
     // 🔹 Track login state globally    
+    private String currentUserId;
+    private String currentUserRole;
+
+    public void setCurrentUser(String id, String role) {
+        this.currentUserId = id;
+        this.currentUserRole = role;
+    }
+
+    public String getCurrentUserId() {
+        return currentUserId;
+    }
+
+    public String getCurrentUserRole() {
+        return currentUserRole;
+    }
+
 
     public RideShareMobileUI() {
         setTitle("Campus RideShare — Mobile");

@@ -117,19 +117,22 @@ public class LoginPage extends JPanel {
                 String role = rs.getString("role");
                 String id = rs.getString("id");
 
+                // ✅ Store login info globally
+                ui.setCurrentUser(id, role);
+
                 switch (role) {
-                case "admin" -> {
-                    JOptionPane.showMessageDialog(this, "Admin login successful!");
-                    ui.setLoggedIn(true); // ✅ added
-                    ui.showScreen("admin");
-                }
+                    case "admin" -> {
+                        JOptionPane.showMessageDialog(this, "Admin login successful!");
+                        ui.setLoggedIn(true);
+                        ui.showScreen("admin");
+                    }
 
                     case "rider" -> {
                         JOptionPane.showMessageDialog(this, "Rider login successful!");
-                        ui.setLoggedIn(true); // ✅ mark as logged in
+                        ui.setLoggedIn(true);
                         ui.showScreen("userhome");
-                        
                     }
+
                     case "driver" -> {
                         String check = "SELECT status FROM driver_applications WHERE id = ?";
                         PreparedStatement ps2 = con.prepareStatement(check);
@@ -140,11 +143,11 @@ public class LoginPage extends JPanel {
                             String status = rs2.getString("status");
                             if (status.equals("approved")) {
                                 JOptionPane.showMessageDialog(this, "Driver login successful!");
-                                ui.setLoggedIn(true); // ✅ added
+                                ui.setLoggedIn(true);
                                 ui.showScreen("providerhome");
-                            }
-                            else {
-                                JOptionPane.showMessageDialog(this, "Your application is " + status + ". Please wait for admin approval.");
+                            } else {
+                                JOptionPane.showMessageDialog(this,
+                                        "Your application is " + status + ". Please wait for admin approval.");
                             }
                         } else {
                             JOptionPane.showMessageDialog(this, "No driver application found.");
@@ -153,6 +156,8 @@ public class LoginPage extends JPanel {
                         ps2.close();
                     }
                 }
+            
+
             } else {
                 JOptionPane.showMessageDialog(this, "Invalid credentials!", "Login Failed", JOptionPane.ERROR_MESSAGE);
             }
