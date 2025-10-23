@@ -32,7 +32,7 @@ public class RideDAO {
     /** Returns all open rides (no search filter). */
     public List<Ride> findAllOpenRides() throws SQLException {
         List<Ride> list = new ArrayList<>();
-        String sql = "SELECT * FROM rides WHERE status = 'Open' ORDER BY date, time";
+        String sql = "SELECT * FROM rides WHERE status = 'Open'";
         try (Connection c = DBConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {

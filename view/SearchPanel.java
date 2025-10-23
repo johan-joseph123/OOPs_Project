@@ -82,7 +82,8 @@ public class SearchPanel extends JPanel {
             }
             try {
                 boolean ok = bookingController.bookSeat(r.getRideId(), ui.getCurrentUserId());
-                if (ok) JOptionPane.showMessageDialog(this, "Ride booked successfully!");
+                if (ok) {JOptionPane.showMessageDialog(this, "Ride booked successfully!");
+                ui.showScreen("riderTrips");               }
                 else JOptionPane.showMessageDialog(this, "Failed to book ride.");
             } catch (SQLException ex) {
                 JOptionPane.showMessageDialog(this, "DB Error: " + ex.getMessage());

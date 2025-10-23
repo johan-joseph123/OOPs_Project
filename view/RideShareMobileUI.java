@@ -2,18 +2,23 @@ package view;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Stack; // ✅ You forgot this import
-
+import java.util.Stack;
 
 public class RideShareMobileUI extends JFrame {
     private final CardLayout cardLayout;
     private final JPanel mainPanel;
     private final NavigationBarPanel navBar;
+
     private String currentScreen = "login";
     private String currentUserId;
     private String currentUserRole;
     private boolean loggedIn = false;
+
     private final Stack<String> screenHistory = new Stack<>();
+
+    // ✅ Panels that need refresh
+    private RiderTripsPanel riderTrips;
+    private ProviderTripsPanel providerTrips;
 
     public RideShareMobileUI() {
         setTitle("Campus RideShare — MVC");
@@ -25,7 +30,7 @@ public class RideShareMobileUI extends JFrame {
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
 
-        // Instantiate panels (views)
+        // Instantiate panels
         LoginPage login = new LoginPage(this);
         SignUpChoicePanel signupChoice = new SignUpChoicePanel(this);
         RiderSignUpPanel riderSignup = new RiderSignUpPanel(this);
@@ -35,9 +40,12 @@ public class RideShareMobileUI extends JFrame {
         OfferRidePanel offer = new OfferRidePanel(this);
         AdminDashboardPanel admin = new AdminDashboardPanel(this);
         SearchPanel search = new SearchPanel(this);
-        MyTripsPanel myTrips = new MyTripsPanel(this); // shared by both
 
-        // Add screens
+        // ✅ These two are now instance variables
+        riderTrips = new RiderTripsPanel(this);
+        providerTrips = new ProviderTripsPanel(this);
+
+        // Add panels
         mainPanel.add(login, "login");
         mainPanel.add(signupChoice, "signup_choice");
         mainPanel.add(riderSignup, "rider_signup");
@@ -47,7 +55,8 @@ public class RideShareMobileUI extends JFrame {
         mainPanel.add(offer, "offer");
         mainPanel.add(admin, "admin");
         mainPanel.add(search, "search");
-        mainPanel.add(myTrips, "trips");
+        mainPanel.add(riderTrips, "riderTrips");
+        mainPanel.add(providerTrips, "providerTrips");
 
         navBar = new NavigationBarPanel(this);
         add(mainPanel, BorderLayout.CENTER);
@@ -56,7 +65,7 @@ public class RideShareMobileUI extends JFrame {
         showScreen("login");
     }
 
-    // ✅ Navigate forward (adds to history)
+    // ✅ Navigate and refresh dynamic screens
     public void showScreen(String name) {
         if (!currentScreen.equals(name)) {
             screenHistory.push(currentScreen);
@@ -64,28 +73,29 @@ public class RideShareMobileUI extends JFrame {
         currentScreen = name;
         cardLayout.show(mainPanel, name);
         navBar.update(name);
-    }
 
-    // ✅ Navigate backward safely
-    public void goBack() {
-        if (!screenHistory.isEmpty()) {
-            String previous = screenHistory.pop();
-            currentScreen = previous;
-            cardLayout.show(mainPanel, previous);
-            navBar.update(previous);
-        } else {
-            // Optional: Exit or go to home
-            if (loggedIn) {
-                if ("driver".equals(currentUserRole)) showScreen("providerhome");
-                else if ("rider".equals(currentUserRole)) showScreen("userhome");
-                else showScreen("login");
-            } else {
-                showScreen("login");
-            }
+        // Refresh data for dynamic panels
+        if ("riderTrips".equals(name) && riderTrips != null) {
+            riderTrips.refreshData();
+        } else if ("providerTrips".equals(name) && providerTrips != null) {
+            providerTrips.refreshData();
         }
     }
 
-    // ✅ User state
+    public void goBack() {
+        if (!screenHistory.isEmpty()) {
+            String previous = screenHistory.pop();
+            showScreen(previous);
+        } else if (loggedIn) {
+            if ("driver".equals(currentUserRole)) showScreen("providerhome");
+            else if ("rider".equals(currentUserRole)) showScreen("userhome");
+            else showScreen("login");
+        } else {
+            showScreen("login");
+        }
+    }
+
+    // ✅ Store current user info
     public void setCurrentUser(String id, String role) {
         this.currentUserId = id;
         this.currentUserRole = role;
@@ -101,7 +111,6 @@ public class RideShareMobileUI extends JFrame {
 
     public boolean isLoggedIn() { return loggedIn; }
 
-    // ✅ Run application
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new RideShareMobileUI().setVisible(true));
     }

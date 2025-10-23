@@ -16,4 +16,8 @@ public class AuthController {
         model.User u = new model.User(id, username, password, "rider");
         return userDAO.createUser(u);
     }
+    public boolean registerDriver(User u) throws Exception {
+        return userDAO.createUser(u);
+    }
+
 }

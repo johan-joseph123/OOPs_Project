@@ -17,9 +17,6 @@ public class BookingController {
     public boolean bookSeat(int rideId, String riderId) throws SQLException {
         if (rideId <= 0 || riderId == null || riderId.isEmpty()) return false;
 
-        // Try to reserve seat
-        boolean seatReserved = rideDAO.reserveSeat(rideId);
-        if (!seatReserved) return false;
 
         // Create booking entry
         Booking b = new Booking();

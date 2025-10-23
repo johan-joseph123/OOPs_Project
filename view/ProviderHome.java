@@ -33,7 +33,7 @@ public class ProviderHome extends JPanel {
 
         // Action Listeners
         offerRideBtn.addActionListener(e -> ui.showScreen("offer"));
-        myTripsBtn.addActionListener(e -> ui.showScreen("trips"));
+        myTripsBtn.addActionListener(e -> ui.showScreen("providerTrips"));
     }
 
     // ✅ Helper method to create attractive buttons
