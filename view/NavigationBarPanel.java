@@ -1,4 +1,4 @@
-package ui;
+package view;
 
 import javax.swing.*;
 import java.awt.*;
@@ -76,7 +76,7 @@ public class NavigationBarPanel extends JPanel {
             if (loggedIn) {
                 loggedIn = false;
                 ui.setLoggedIn(false);
-                JOptionPane.showMessageDialog(this, "You have logged out successfully.");
+                //JOptionPane.showMessageDialog(this, "You have logged out successfully.");
                 ui.showScreen("login");
             } else {
                 JOptionPane.showMessageDialog(this, 
