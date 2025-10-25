@@ -1,287 +1,366 @@
 package view;
 
 import controller.AdminController;
+import dao.DBConnection;
 import model.DriverApplication;
-import view.RideShareMobileUI;
+import util.UIStyleHelper;
 
 import javax.swing.*;
 import java.awt.*;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.List;
 
 public class AdminDashboardPanel extends JPanel {
-    private final RideShareMobileUI ui;
     private final AdminController adminController = new AdminController();
+    private JPanel appListPanel, userListPanel, rideListPanel;
+    private Timer autoRefreshTimer;
+
+    private String currentAppFilter = "all";
+    private String currentUserRoleFilter = "all";
+    private String currentRideStatusFilter = "all";
 
     public AdminDashboardPanel(RideShareMobileUI ui) {
-        this.ui = ui;
         setLayout(new BorderLayout());
-        setBackground(Color.WHITE);
+        setBackground(UIStyleHelper.BG_COLOR);
 
-        JLabel header = new JLabel("Admin Dashboard", SwingConstants.CENTER);
-        header.setFont(new Font("Segoe UI", Font.BOLD, 26));
-        header.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
-        add(header, BorderLayout.NORTH);
+        JLabel title = UIStyleHelper.createTitle("👑 Admin Dashboard");
+        add(title, BorderLayout.NORTH);
 
-        JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-        tabbedPane.addTab("Applications", createApplicationsTab());
-        tabbedPane.addTab("Users", createUsersTab());
-        tabbedPane.addTab("Rides", createRidesTab());
-        add(tabbedPane, BorderLayout.CENTER);
+        JTabbedPane tabs = new JTabbedPane(JTabbedPane.TOP);
+        tabs.setFont(new Font("Segoe UI", Font.BOLD, 14));
 
-        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 10));
-        footer.setBackground(new Color(245, 245, 245));
-        JButton refreshBtn = new JButton("↻ Refresh");
-        refreshBtn.addActionListener(e -> refreshTabs(tabbedPane));
-        footer.add(refreshBtn);
-        add(footer, BorderLayout.SOUTH);
+        tabs.add("Driver Applications", createApplicationsTab());
+        tabs.add("Users", createUsersTab());
+        tabs.add("Rides", createRidesTab());
+
+        add(tabs, BorderLayout.CENTER);
+
+        // Auto refresh all tabs every 5 seconds
+        autoRefreshTimer = new Timer(5000, e -> {
+            refreshApplicationsList();
+            refreshUsersList();
+            refreshRidesList();
+        });
+        autoRefreshTimer.start();
     }
 
-    private void refreshTabs(JTabbedPane tabbedPane) {
-        tabbedPane.setComponentAt(0, createApplicationsTab());
-        tabbedPane.setComponentAt(1, createUsersTab());
-        tabbedPane.setComponentAt(2, createRidesTab());
-    }
-
-    /** -------------------- Applications -------------------- **/
+    // ==================== DRIVER APPLICATIONS ====================
     private JPanel createApplicationsTab() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(Color.WHITE);
+        JPanel panel = UIStyleHelper.createContentPanel("Driver Applications");
+        panel.setLayout(new BorderLayout());
 
-        JLabel title = new JLabel("Pending Driver Applications", SwingConstants.CENTER);
-        title.setFont(new Font("Segoe UI", Font.BOLD, 20));
-        title.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
-        panel.add(title, BorderLayout.NORTH);
+        JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
+        filterPanel.setBackground(Color.WHITE);
+        JButton allBtn = UIStyleHelper.styleButton(new JButton("🌍 All"), new Color(100, 149, 237));
+        JButton approvedBtn = UIStyleHelper.styleButton(new JButton("🟢 Approved"), new Color(46, 204, 113));
+        JButton pendingBtn = UIStyleHelper.styleButton(new JButton("🟡 Pending"), new Color(241, 196, 15));
+        JButton rejectedBtn = UIStyleHelper.styleButton(new JButton("🔴 Rejected"), new Color(231, 76, 60));
 
-        JPanel listPanel = new JPanel();
-        listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
-        listPanel.setBackground(Color.WHITE);
+        allBtn.addActionListener(e -> { currentAppFilter = "all"; refreshApplicationsList(); });
+        approvedBtn.addActionListener(e -> { currentAppFilter = "approved"; refreshApplicationsList(); });
+        pendingBtn.addActionListener(e -> { currentAppFilter = "pending"; refreshApplicationsList(); });
+        rejectedBtn.addActionListener(e -> { currentAppFilter = "rejected"; refreshApplicationsList(); });
+
+        filterPanel.add(allBtn);
+        filterPanel.add(approvedBtn);
+        filterPanel.add(pendingBtn);
+        filterPanel.add(rejectedBtn);
+
+        appListPanel = new JPanel();
+        appListPanel.setLayout(new BoxLayout(appListPanel, BoxLayout.Y_AXIS));
+        appListPanel.setBackground(Color.WHITE);
+
+        JScrollPane scroll = new JScrollPane(appListPanel);
+        scroll.setBorder(null);
+
+        panel.add(filterPanel, BorderLayout.NORTH);
+        panel.add(scroll, BorderLayout.CENTER);
+
+        refreshApplicationsList();
+        return panel;
+    }
+
+    private void refreshApplicationsList() {
+        if (appListPanel == null) return;
+        appListPanel.removeAll();
 
         try {
-            List<DriverApplication> apps = adminController.getPendingApplications();
-            if (apps.isEmpty()) {
-                JLabel empty = new JLabel("No pending applications!", SwingConstants.CENTER);
-                empty.setFont(new Font("Segoe UI", Font.ITALIC, 16));
-                empty.setForeground(Color.GRAY);
-                listPanel.add(empty);
-            } else {
-                for (DriverApplication da : apps) {
-                    JPanel card = new JPanel(new BorderLayout());
-                    card.setBackground(new Color(245, 248, 255));
-                    card.setBorder(BorderFactory.createEmptyBorder(12, 15, 12, 15));
-
-                    JPanel info = new JPanel(new GridLayout(3, 1));
-                    info.setOpaque(false);
-                    info.add(new JLabel("     " + da.getName() + " | " + da.getVehicleModel()));
-                    info.add(new JLabel("License: " + da.getLicenseNumber()));
-                    info.add(new JLabel("File: " + da.getLicenseFile()));
-
-                    JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 10));
-                    buttons.setOpaque(false);
-                    JButton approve = new JButton("Approve");
-                    JButton reject = new JButton("Reject");
-                    approve.addActionListener(e -> updateStatus(da.getId(), "approved"));
-                    reject.addActionListener(e -> updateStatus(da.getId(), "rejected"));
-                    buttons.add(approve);
-                    buttons.add(reject);
-
-                    card.add(info, BorderLayout.CENTER);
-                    card.add(buttons, BorderLayout.EAST);
-                    listPanel.add(card);
-                    listPanel.add(Box.createVerticalStrut(10));
+            List<DriverApplication> apps = adminController.getAllApplications();
+            for (DriverApplication da : apps) {
+                if (currentAppFilter.equals("all") || da.getStatus().equalsIgnoreCase(currentAppFilter)) {
+                    appListPanel.add(createApplicationCard(da));
+                    appListPanel.add(Box.createVerticalStrut(8));
                 }
             }
-        } catch (SQLException ex) {
-            listPanel.add(new JLabel("Error: " + ex.getMessage()));
+
+            if (appListPanel.getComponentCount() == 0)
+                appListPanel.add(UIStyleHelper.createInfoLabel("No applications found."));
+        } catch (Exception e) {
+            appListPanel.add(UIStyleHelper.createInfoLabel("Error loading applications: " + e.getMessage()));
         }
 
-        JScrollPane scroll = new JScrollPane(listPanel);
-        scroll.setBorder(null);
-        panel.add(scroll, BorderLayout.CENTER);
-        return panel;
+        appListPanel.revalidate();
+        appListPanel.repaint();
+    }
+
+    private JPanel createApplicationCard(DriverApplication da) {
+        JPanel card = UIStyleHelper.createContentPanel("");
+        card.setLayout(new BorderLayout());
+        card.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+
+        // === Left: Application Info ===
+        JLabel info = new JLabel("<html><b>" + da.getName() + "</b> — " + da.getVehicleModel() +
+                "<br/>License: " + da.getLicenseNumber() +
+                "<br/>File: " + da.getLicenseFile() + "</html>");
+        info.setFont(UIStyleHelper.TEXT_FONT);
+        card.add(info, BorderLayout.CENTER);
+
+        // === Right: Status + Buttons ===
+        JPanel rightPanel = new JPanel();
+        rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
+        rightPanel.setOpaque(false);
+        rightPanel.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 5));
+
+        // ===== Compact Status Badge =====
+        JLabel statusLabel = new JLabel();
+        statusLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        statusLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        statusLabel.setOpaque(true);
+        statusLabel.setForeground(Color.WHITE);
+        statusLabel.setBorder(BorderFactory.createEmptyBorder(4, 12, 4, 12));
+        statusLabel.setAlignmentX(Component.RIGHT_ALIGNMENT);
+
+        String status = da.getStatus().toLowerCase();
+        switch (status) {
+            case "approved" -> {
+                statusLabel.setText("✅ APPROVED");
+                statusLabel.setBackground(new Color(46, 204, 113));
+            }
+            case "rejected" -> {
+                statusLabel.setText("❌ REJECTED");
+                statusLabel.setBackground(new Color(231, 76, 60));
+            }
+            default -> {
+                statusLabel.setText("🕓 PENDING");
+                statusLabel.setBackground(new Color(241, 196, 15));
+                addBlinkEffect(statusLabel);
+            }
+        }
+
+        statusLabel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Color.WHITE, 1, true),
+                BorderFactory.createEmptyBorder(4, 10, 4, 10)
+        ));
+
+        // ===== Buttons Panel =====
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 5));
+        btnPanel.setOpaque(false);
+
+        JButton approveBtn = UIStyleHelper.styleButton(new JButton("Approve"), UIStyleHelper.SUCCESS_COLOR);
+        JButton rejectBtn = UIStyleHelper.styleButton(new JButton("Reject"), Color.RED);
+
+        if (status.equals("approved")) {
+            JButton changeReject = UIStyleHelper.styleButton(new JButton("↩️ Change to Reject"), new Color(255, 77, 77));
+            changeReject.addActionListener(e -> updateStatus(da.getId(), "rejected"));
+            btnPanel.add(changeReject);
+
+        } else if (status.equals("rejected")) {
+            JButton changeApprove = UIStyleHelper.styleButton(new JButton("↩️ Change to Approve"), new Color(88, 214, 141));
+            changeApprove.addActionListener(e -> updateStatus(da.getId(), "approved"));
+            btnPanel.add(changeApprove);
+
+        } else {
+            approveBtn.addActionListener(e -> updateStatus(da.getId(), "approved"));
+            rejectBtn.addActionListener(e -> updateStatus(da.getId(), "rejected"));
+            btnPanel.add(approveBtn);
+            btnPanel.add(rejectBtn);
+        }
+
+        // Combine badge and buttons in right panel
+        rightPanel.add(statusLabel);
+        rightPanel.add(Box.createVerticalStrut(8));
+        rightPanel.add(btnPanel);
+
+        card.add(rightPanel, BorderLayout.EAST);
+        return card;
+    }
+
+    /** 🌟 Makes pending status label gently blink between two shades of yellow */
+    private void addBlinkEffect(JLabel label) {
+        Color bright = new Color(255, 215, 0);
+        Color dim = new Color(241, 196, 15);
+        Timer blinkTimer = new Timer(500, null);
+        blinkTimer.addActionListener(e -> {
+            Color current = label.getBackground();
+            label.setBackground(current.equals(bright) ? dim : bright);
+        });
+        blinkTimer.start();
     }
 
     private void updateStatus(String id, String status) {
         try {
-            boolean ok = adminController.updateApplicationStatus(id, status);
-            if (ok)
-                JOptionPane.showMessageDialog(this, "Driver " + id + " has been " + status + ".");
-            else
-                JOptionPane.showMessageDialog(this, "Failed to update status.");
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "DB Error", JOptionPane.ERROR_MESSAGE);
+            if (adminController.updateApplicationStatus(id, status)) {
+                refreshApplicationsList();
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error updating status: " + e.getMessage());
         }
     }
 
-    /** -------------------- Users -------------------- **/
+    // ==================== USERS TAB ====================
     private JPanel createUsersTab() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(Color.WHITE);
+        JPanel panel = UIStyleHelper.createContentPanel("Registered Users");
+        panel.setLayout(new BorderLayout());
 
-        JLabel title = new JLabel("Registered Users", SwingConstants.CENTER);
-        title.setFont(new Font("Segoe UI", Font.BOLD, 20));
-        title.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
-        panel.add(title, BorderLayout.NORTH);
+        JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
+        filterPanel.setBackground(Color.WHITE);
+        JButton allBtn = UIStyleHelper.styleButton(new JButton("🌍 All"), new Color(100, 149, 237));
+        JButton riderBtn = UIStyleHelper.styleButton(new JButton("🧍 Rider"), new Color(52, 152, 219));
+        JButton driverBtn = UIStyleHelper.styleButton(new JButton("🚘 Driver"), new Color(46, 204, 113));
+        JButton adminBtn = UIStyleHelper.styleButton(new JButton("👑 Admin"), new Color(155, 89, 182));
 
-        JPanel listPanel = new JPanel();
-        listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
-        listPanel.setBackground(Color.WHITE);
+        allBtn.addActionListener(e -> { currentUserRoleFilter = "all"; refreshUsersList(); });
+        riderBtn.addActionListener(e -> { currentUserRoleFilter = "rider"; refreshUsersList(); });
+        driverBtn.addActionListener(e -> { currentUserRoleFilter = "driver"; refreshUsersList(); });
+        adminBtn.addActionListener(e -> { currentUserRoleFilter = "admin"; refreshUsersList(); });
 
-        try (java.sql.Connection conn = dao.DBConnection.getConnection();
-             java.sql.Statement st = conn.createStatement();
-             java.sql.ResultSet rs = st.executeQuery("SELECT id, username, role FROM users ORDER BY role, username")) {
+        filterPanel.add(allBtn);
+        filterPanel.add(riderBtn);
+        filterPanel.add(driverBtn);
+        filterPanel.add(adminBtn);
 
-            if (!rs.isBeforeFirst()) {
-                JLabel empty = new JLabel("No registered users found.", SwingConstants.CENTER);
-                empty.setFont(new Font("Segoe UI", Font.ITALIC, 16));
-                empty.setForeground(Color.GRAY);
-                listPanel.add(empty);
-            } else {
-                while (rs.next()) {
-                    String id = rs.getString("id");
-                    String username = rs.getString("username");
-                    String role = rs.getString("role");
+        userListPanel = new JPanel();
+        userListPanel.setLayout(new BoxLayout(userListPanel, BoxLayout.Y_AXIS));
+        userListPanel.setBackground(Color.WHITE);
 
-                    JPanel card = new JPanel(new BorderLayout());
-                    card.setBackground(new Color(245, 248, 255));
-                    card.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
-
-                    JLabel info = new JLabel("<html><b>" + username + "</b> (" + role + ")<br>ID: " + id + "</html>");
-                    info.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-
-                    JButton deleteBtn = new JButton("Delete");
-                    deleteBtn.setBackground(new Color(255, 80, 80));
-                    deleteBtn.setForeground(Color.WHITE);
-                    deleteBtn.addActionListener(e -> deleteUser(id, username, role));
-
-                    card.add(info, BorderLayout.CENTER);
-                    card.add(deleteBtn, BorderLayout.EAST);
-                    listPanel.add(card);
-                    listPanel.add(Box.createVerticalStrut(8));
-                }
-            }
-
-        } catch (Exception ex) {
-            listPanel.add(new JLabel("Error loading users: " + ex.getMessage()));
-        }
-
-        JScrollPane scroll = new JScrollPane(listPanel);
+        JScrollPane scroll = new JScrollPane(userListPanel);
         scroll.setBorder(null);
+
+        panel.add(filterPanel, BorderLayout.NORTH);
         panel.add(scroll, BorderLayout.CENTER);
+
+        refreshUsersList();
         return panel;
     }
 
-    private void deleteUser(String id, String username, String role) {
-        int confirm = JOptionPane.showConfirmDialog(this,
-                "Delete user '" + username + "' (" + role + ")?\nAll their data will be permanently removed.",
-                "Confirm Deletion",
-                JOptionPane.YES_NO_OPTION);
+    private void refreshUsersList() {
+        if (userListPanel == null) return;
+        userListPanel.removeAll();
 
-        if (confirm == JOptionPane.YES_OPTION) {
-            try (java.sql.Connection conn = dao.DBConnection.getConnection();
-                 java.sql.PreparedStatement ps = conn.prepareStatement("DELETE FROM users WHERE id = ?")) {
+        try (Connection con = DBConnection.getConnection();
+             Statement st = con.createStatement();
+             ResultSet rs = st.executeQuery("SELECT * FROM users")) {
 
-                ps.setString(1, id);
-                int rows = ps.executeUpdate();
+            while (rs.next()) {
+                String id = rs.getString("id");
+                String username = rs.getString("username");
+                String role = rs.getString("role");
 
-                if (rows > 0)
-                    JOptionPane.showMessageDialog(this, "User deleted successfully (ID: " + id + ")");
-                else
-                    JOptionPane.showMessageDialog(this, "Failed to delete user (ID: " + id + ")");
+                if (currentUserRoleFilter.equals("all") || currentUserRoleFilter.equalsIgnoreCase(role)) {
+                    JPanel card = new JPanel(new BorderLayout());
+                    card.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
 
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Error deleting user: " + ex.getMessage());
+                    Color bgColor = switch (role.toLowerCase()) {
+                        case "admin" -> new Color(155, 89, 182);
+                        case "driver" -> new Color(46, 204, 113);
+                        case "rider" -> new Color(52, 152, 219);
+                        default -> new Color(149, 165, 166);
+                    };
+
+                    card.setBackground(bgColor);
+
+                    JLabel lbl = new JLabel("<html><font color='white'><b>" + username + "</b> — (" + role + ")" +
+                            "<br/>🆔 ID: " + id + "</font></html>");
+                    lbl.setFont(UIStyleHelper.TEXT_FONT);
+
+                    card.add(lbl, BorderLayout.CENTER);
+                    userListPanel.add(card);
+                    userListPanel.add(Box.createVerticalStrut(8));
+                }
             }
+
+            if (userListPanel.getComponentCount() == 0)
+                userListPanel.add(UIStyleHelper.createInfoLabel("No users found."));
+
+        } catch (SQLException e) {
+            userListPanel.add(UIStyleHelper.createInfoLabel("Error loading users: " + e.getMessage()));
         }
+
+        userListPanel.revalidate();
+        userListPanel.repaint();
     }
 
-    /** -------------------- Rides -------------------- **/
+    // ==================== RIDES TAB ====================
     private JPanel createRidesTab() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(Color.WHITE);
+        JPanel panel = UIStyleHelper.createContentPanel("All Rides");
+        panel.setLayout(new BorderLayout());
 
-        JLabel title = new JLabel("All Offered Rides", SwingConstants.CENTER);
-        title.setFont(new Font("Segoe UI", Font.BOLD, 20));
-        title.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
-        panel.add(title, BorderLayout.NORTH);
+        JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
+        filterPanel.setBackground(Color.WHITE);
+        JButton allBtn = UIStyleHelper.styleButton(new JButton("🌍 All"), new Color(100, 149, 237));
+        JButton openBtn = UIStyleHelper.styleButton(new JButton("🟢 Open"), new Color(46, 204, 113));
+        JButton doneBtn = UIStyleHelper.styleButton(new JButton("🔵 Completed"), new Color(52, 152, 219));
+        JButton cancelledBtn = UIStyleHelper.styleButton(new JButton("🔴 Cancelled"), new Color(231, 76, 60));
 
-        JPanel listPanel = new JPanel();
-        listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
-        listPanel.setBackground(Color.WHITE);
+        allBtn.addActionListener(e -> { currentRideStatusFilter = "all"; refreshRidesList(); });
+        openBtn.addActionListener(e -> { currentRideStatusFilter = "open"; refreshRidesList(); });
+        doneBtn.addActionListener(e -> { currentRideStatusFilter = "completed"; refreshRidesList(); });
+        cancelledBtn.addActionListener(e -> { currentRideStatusFilter = "cancelled"; refreshRidesList(); });
 
-        try (java.sql.Connection conn = dao.DBConnection.getConnection();
-             java.sql.Statement st = conn.createStatement();
-             java.sql.ResultSet rs = st.executeQuery("SELECT * FROM rides ORDER BY date DESC")) {
+        filterPanel.add(allBtn);
+        filterPanel.add(openBtn);
+        filterPanel.add(doneBtn);
+        filterPanel.add(cancelledBtn);
 
-            if (!rs.isBeforeFirst()) {
-                JLabel empty = new JLabel("No rides available.", SwingConstants.CENTER);
-                empty.setFont(new Font("Segoe UI", Font.ITALIC, 16));
-                empty.setForeground(Color.GRAY);
-                listPanel.add(empty);
-            } else {
-                while (rs.next()) {
-                    int rideId = rs.getInt("ride_id");
-                    String driver = rs.getString("driver_name");
+        rideListPanel = new JPanel();
+        rideListPanel.setLayout(new BoxLayout(rideListPanel, BoxLayout.Y_AXIS));
+        rideListPanel.setBackground(Color.WHITE);
+
+        JScrollPane scroll = new JScrollPane(rideListPanel);
+        scroll.setBorder(null);
+
+        panel.add(filterPanel, BorderLayout.NORTH);
+        panel.add(scroll, BorderLayout.CENTER);
+
+        refreshRidesList();
+        return panel;
+    }
+
+    private void refreshRidesList() {
+        if (rideListPanel == null) return;
+        rideListPanel.removeAll();
+
+        try (Connection con = DBConnection.getConnection();
+             Statement st = con.createStatement();
+             ResultSet rs = st.executeQuery("SELECT * FROM rides")) {
+
+            while (rs.next()) {
+                String status = rs.getString("status");
+                if (currentRideStatusFilter.equals("all") || currentRideStatusFilter.equalsIgnoreCase(status)) {
                     String from = rs.getString("from_location");
                     String to = rs.getString("to_location");
-                    String date = rs.getDate("date").toString();
-                    String time = rs.getString("time");
-                    int seats = rs.getInt("seats_available");
-                    String status = rs.getString("status");
+                    String driver = rs.getString("driver_name");
+                    Date date = rs.getDate("date");
 
-                    JPanel card = new JPanel(new BorderLayout());
-                    card.setBackground(new Color(245, 248, 255));
-                    card.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+                    JLabel lbl = new JLabel("<html><b>" + from + " → " + to + "</b><br/>Driver: "
+                            + driver + " | " + date + " | " + status + "</html>");
+                    lbl.setFont(UIStyleHelper.TEXT_FONT);
 
-                    JLabel info = new JLabel("<html><b>" + driver + "</b> — " + from + " → " + to
-                            + "<br/>Date: " + date + " " + time
-                            + " | Seats: " + seats
-                            + " | Status: <b>" + status + "</b></html>");
-                    info.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-
-                    JButton deleteBtn = new JButton("Delete Ride");
-                    deleteBtn.setBackground(new Color(255, 100, 100));
-                    deleteBtn.setForeground(Color.WHITE);
-                    deleteBtn.addActionListener(e -> deleteRide(rideId));
-
-                    card.add(info, BorderLayout.CENTER);
-                    card.add(deleteBtn, BorderLayout.EAST);
-                    listPanel.add(card);
-                    listPanel.add(Box.createVerticalStrut(8));
+                    JPanel card = UIStyleHelper.createContentPanel("");
+                    card.add(lbl, BorderLayout.CENTER);
+                    rideListPanel.add(card);
+                    rideListPanel.add(Box.createVerticalStrut(8));
                 }
             }
 
-        } catch (Exception ex) {
-            listPanel.add(new JLabel("Error loading rides: " + ex.getMessage()));
+            if (rideListPanel.getComponentCount() == 0)
+                rideListPanel.add(UIStyleHelper.createInfoLabel("No rides found."));
+
+        } catch (SQLException e) {
+            rideListPanel.add(UIStyleHelper.createInfoLabel("Error loading rides: " + e.getMessage()));
         }
 
-        JScrollPane scroll = new JScrollPane(listPanel);
-        scroll.setBorder(null);
-        panel.add(scroll, BorderLayout.CENTER);
-        return panel;
-    }
-
-    private void deleteRide(int rideId) {
-        int confirm = JOptionPane.showConfirmDialog(this,
-                "Delete this ride and all related bookings?",
-                "Confirm Deletion",
-                JOptionPane.YES_NO_OPTION);
-
-        if (confirm == JOptionPane.YES_OPTION) {
-            try (java.sql.Connection conn = dao.DBConnection.getConnection();
-                 java.sql.PreparedStatement ps = conn.prepareStatement("DELETE FROM rides WHERE ride_id = ?")) {
-
-                ps.setInt(1, rideId);
-                int rows = ps.executeUpdate();
-
-                if (rows > 0)
-                    JOptionPane.showMessageDialog(this, "Ride deleted successfully (ID: " + rideId + ")");
-                else
-                    JOptionPane.showMessageDialog(this, "Failed to delete ride.");
-
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Error deleting ride: " + ex.getMessage());
-            }
-        }
+        rideListPanel.revalidate();
+        rideListPanel.repaint();
     }
 }

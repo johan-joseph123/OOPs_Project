@@ -1,84 +1,152 @@
 package view;
 
 import controller.AuthController;
+import dao.DriverApplicationDAO;
+import model.DriverApplication;
 import model.User;
-import view.RideShareMobileUI;
+import util.UIStyleHelper;
 
 import javax.swing.*;
 import java.awt.*;
 
+/**
+ * 🧩 Login screen with driver approval check and role-based navigation
+ * ✅ Now also stores username for personalized navbar greetings.
+ */
 public class LoginPage extends JPanel {
-    private JTextField usernameField;
-    private JPasswordField passwordField;
+    private final JTextField usernameField;
+    private final JPasswordField passwordField;
     private final AuthController auth = new AuthController();
 
     public LoginPage(RideShareMobileUI ui) {
         setLayout(new BorderLayout());
-        setBackground(new Color(245,245,245));
-        JLabel title = new JLabel(" RideShare Login", SwingConstants.CENTER);
-        title.setFont(new Font("Arial", Font.BOLD, 24));
-        title.setForeground(new Color(0,102,204));
-        title.setBorder(BorderFactory.createEmptyBorder(30,0,20,0));
+        setBackground(UIStyleHelper.BG_COLOR);
+
+        JLabel title = UIStyleHelper.createTitle("🚗 RideShare Login");
         add(title, BorderLayout.NORTH);
 
-        JPanel loginPanel = initComponents(ui);
-        add(loginPanel, BorderLayout.CENTER);
-    }
-
-    private JPanel initComponents(RideShareMobileUI ui) {
         JPanel cardPanel = new JPanel(new GridBagLayout());
         cardPanel.setBackground(Color.WHITE);
-        cardPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(new Color(200,200,200),1), BorderFactory.createEmptyBorder(30,40,30,40)));
+        cardPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(200, 210, 230), 1),
+                BorderFactory.createEmptyBorder(30, 40, 30, 40)
+        ));
+
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10,10,10,10);
+        gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         JLabel userLabel = new JLabel("Username:");
-        usernameField = new JTextField(15);
+        usernameField = UIStyleHelper.styleTextField(new JTextField(15));
         JLabel passLabel = new JLabel("Password:");
-        passwordField = new JPasswordField(15);
-        JButton loginButton = new JButton("Login");
-        JButton signUpButton = new JButton("Create an Account");
+        passwordField = UIStyleHelper.stylePasswordField(new JPasswordField(15));
 
-        // layout
+        JButton loginButton = UIStyleHelper.styleButton(new JButton("Login"), UIStyleHelper.PRIMARY_COLOR);
+        JButton signUpButton = UIStyleHelper.styleButton(new JButton("Create an Account"), UIStyleHelper.SECONDARY_COLOR);
+
+        // Layout
         gbc.gridx = 0; gbc.gridy = 0; cardPanel.add(userLabel, gbc);
         gbc.gridx = 1; cardPanel.add(usernameField, gbc);
-        gbc.gridy++; gbc.gridx=0; cardPanel.add(passLabel, gbc);
-        gbc.gridx=1; cardPanel.add(passwordField, gbc);
-        gbc.gridy++; gbc.gridx=1; gbc.insets = new Insets(20,10,5,10);
+        gbc.gridy++; gbc.gridx = 0; cardPanel.add(passLabel, gbc);
+        gbc.gridx = 1; cardPanel.add(passwordField, gbc);
+        gbc.gridy++; gbc.gridx = 1; gbc.insets = new Insets(20, 10, 10, 10);
         cardPanel.add(loginButton, gbc);
-        gbc.gridy++; gbc.insets = new Insets(5,10,10,10);
+        gbc.gridy++; gbc.insets = new Insets(5, 10, 10, 10);
         cardPanel.add(signUpButton, gbc);
 
+        JPanel wrapper = new JPanel(new GridBagLayout());
+        wrapper.setBackground(UIStyleHelper.BG_COLOR);
+        wrapper.add(cardPanel);
+        add(wrapper, BorderLayout.CENTER);
+
+        // === Login Button Logic ===
         loginButton.addActionListener(e -> {
-            String u = usernameField.getText().trim();
-            String p = new String(passwordField.getPassword()).trim();
-            if (u.isEmpty() || p.isEmpty()) { JOptionPane.showMessageDialog(this, "Enter credentials"); return; }
+            String username = usernameField.getText().trim();
+            String password = new String(passwordField.getPassword()).trim();
+
+            if (username.isEmpty() || password.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please enter both username and password.", "Warning", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
             try {
-                User user = auth.login(u, p);
-                ui.setCurrentUser(user.getId(), user.getRole());
-                ui.setLoggedIn(true);
-                switch (user.getRole()) {
-                    case "admin": ui.showScreen("admin"); break;
-                    case "rider": ui.showScreen("userhome"); break;
-                    case "driver":
-                        // check driver application status
-                        controller.AdminController admin = new controller.AdminController();
-                        // we will check driver_applications status via DAO inside OfferRidePanel when needed
-                        ui.showScreen("providerhome");
-                        break;
-                    default: ui.showScreen("login");
+                User user = auth.login(username, password);
+
+                if (user == null) {
+                    JOptionPane.showMessageDialog(this, "Invalid credentials. Try again.", "Login Failed", JOptionPane.ERROR_MESSAGE);
+                    return;
                 }
+
+                // ✅ Save user info globally (for Navbar greeting)
+                ui.setCurrentUserId(user.getId());
+                ui.setCurrentUserRole(user.getRole());
+                ui.setCurrentUsername(user.getUsername());
+                ui.setLoggedIn(true);
+
+                // === Driver login approval logic ===
+                if ("driver".equalsIgnoreCase(user.getRole())) {
+                    DriverApplicationDAO dao = new DriverApplicationDAO();
+                    DriverApplication da = dao.findById(user.getId());
+
+                    if (da == null) {
+                        JOptionPane.showMessageDialog(this,
+                                "You have not applied as a driver yet.\nPlease complete the driver application form.",
+                                "Access Denied", JOptionPane.WARNING_MESSAGE);
+                        ui.showScreen("driver_application");
+                        return;
+                    }
+
+                    switch (da.getStatus().toLowerCase()) {
+                        case "pending" -> {
+                            JOptionPane.showMessageDialog(this,
+                                    "⏳ Your driver application is still pending approval by the admin.\nPlease try again later.",
+                                    "Not Approved Yet", JOptionPane.INFORMATION_MESSAGE);
+                            return;
+                        }
+                        case "rejected" -> {
+                            JOptionPane.showMessageDialog(this,
+                                    "❌ Your driver application has been rejected.\nContact admin for clarification.",
+                                    "Access Denied", JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
+                        case "approved" -> {
+                            ui.showScreen("providerhome");
+                            JOptionPane.showMessageDialog(this,
+                                    "✅ Welcome, " + user.getUsername() + "!\nYour driver account is approved.",
+                                    "Login Successful", JOptionPane.INFORMATION_MESSAGE);
+                            return;
+                        }
+                        default -> {
+                            JOptionPane.showMessageDialog(this,
+                                    "Unknown driver application status: " + da.getStatus(),
+                                    "Error", JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
+                    }
+                }
+
+                // === Other Roles ===
+                switch (user.getRole().toLowerCase()) {
+                    case "admin" -> {
+                        ui.showScreen("admin");
+                        JOptionPane.showMessageDialog(this, "👑 Welcome Admin " + user.getUsername() + "!");
+                    }
+                    case "rider" -> {
+                        ui.showScreen("userhome");
+                        JOptionPane.showMessageDialog(this, "🚗 Welcome " + user.getUsername() + "!");
+                    }
+                    default -> {
+                        JOptionPane.showMessageDialog(this, "Unknown role. Contact admin.", "Error", JOptionPane.ERROR_MESSAGE);
+                        ui.showScreen("login");
+                    }
+                }
+
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Login failed: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Login Error", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
             }
         });
 
         signUpButton.addActionListener(e -> ui.showScreen("signup_choice"));
-
-        JPanel container = new JPanel(new GridBagLayout());
-        container.setBackground(new Color(245,245,245));
-        container.add(cardPanel);
-        return container;
     }
 }

@@ -1,50 +1,64 @@
 package view;
 
-import view.RideShareMobileUI;
+import util.UIStyleHelper;
 
 import javax.swing.*;
 import java.awt.*;
 
+/**
+ * Allows user to choose whether to sign up as a Rider or a Driver.
+ */
 public class SignUpChoicePanel extends JPanel {
     public SignUpChoicePanel(RideShareMobileUI ui) {
         setLayout(new BorderLayout());
-        setBackground(Color.WHITE);
-        JLabel title = new JLabel("Join Campus RideShare", SwingConstants.CENTER);
-        title.setFont(new Font("Arial", Font.BOLD, 22));
-        title.setBorder(BorderFactory.createEmptyBorder(30,0,10,0));
+        setBackground(UIStyleHelper.BG_COLOR);
+
+        JLabel title = UIStyleHelper.createTitle("🧍 Join Campus RideShare");
         add(title, BorderLayout.NORTH);
 
         JPanel centerPanel = new JPanel(new GridBagLayout());
         centerPanel.setBackground(Color.WHITE);
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(20,10,20,10); gbc.fill = GridBagConstraints.HORIZONTAL;
-        JLabel subtitle = new JLabel("Choose your role:", SwingConstants.CENTER);
-        subtitle.setFont(new Font("Arial", Font.PLAIN, 16));
-        gbc.gridx=0; gbc.gridy=0; gbc.gridwidth=2; centerPanel.add(subtitle, gbc);
+        centerPanel.setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50));
 
-        JButton driverBtn = new JButton(" Driver");
-        JButton riderBtn = new JButton(" Rider");
-        Dimension btnSize = new Dimension(220,45);
-        driverBtn.setPreferredSize(btnSize); riderBtn.setPreferredSize(btnSize);
-        Color primaryColor = new Color(33,150,243);
-        for (JButton b : new JButton[]{driverBtn, riderBtn}) {
-            b.setBackground(primaryColor); b.setForeground(Color.WHITE); b.setFocusPainted(false);
-        }
-        gbc.gridy++; centerPanel.add(driverBtn, gbc);
-        gbc.gridy++; centerPanel.add(riderBtn, gbc);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(20, 10, 20, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        JLabel prompt = new JLabel("Select your role:");
+        prompt.setFont(new Font("Segoe UI", Font.ITALIC, 14));
+        prompt.setHorizontalAlignment(SwingConstants.CENTER);
+
+        JButton driverBtn = UIStyleHelper.styleButton(new JButton("🚗 Driver"), UIStyleHelper.PRIMARY_COLOR);
+        JButton riderBtn = UIStyleHelper.styleButton(new JButton("🧑‍🎓 Rider"), UIStyleHelper.PRIMARY_COLOR);
+        JButton backBtn = UIStyleHelper.styleButton(new JButton("← Back"), UIStyleHelper.SECONDARY_COLOR);
+
+        // === Layout ===
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        centerPanel.add(prompt, gbc);
+
+        gbc.gridy++;
+        centerPanel.add(driverBtn, gbc);
+
+        gbc.gridy++;
+        centerPanel.add(riderBtn, gbc);
+
+        gbc.gridy++;
+        centerPanel.add(backBtn, gbc);
 
         add(centerPanel, BorderLayout.CENTER);
 
-        JPanel bottom = new JPanel(); bottom.setBackground(Color.WHITE);
-        JLabel haveAcc = new JLabel("Already have an account?");
-        JButton loginLink = new JButton("Login");
-        loginLink.setContentAreaFilled(false); loginLink.setBorderPainted(false);
-        loginLink.setForeground(primaryColor);
-        bottom.add(haveAcc); bottom.add(loginLink);
-        add(bottom, BorderLayout.SOUTH);
+        // === Actions ===
+        driverBtn.addActionListener(e -> {
+            ui.showScreen("driver_application"); // ✅ Correct navigation
+        });
 
-        driverBtn.addActionListener(e -> ui.showScreen("driver_signup"));
-        riderBtn.addActionListener(e -> ui.showScreen("rider_signup"));
-        loginLink.addActionListener(e -> ui.showScreen("login"));
+        riderBtn.addActionListener(e -> {
+            ui.showScreen("rider_signup"); // ✅ Goes to RiderSignUpPanel
+        });
+
+        backBtn.addActionListener(e -> {
+            ui.showScreen("login"); // ✅ Back to login
+        });
     }
 }
