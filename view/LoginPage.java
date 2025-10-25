@@ -1,3 +1,4 @@
+
 package view;
 
 import controller.AuthController;
@@ -43,7 +44,8 @@ public class LoginPage extends JPanel {
 
         JButton loginButton = UIStyleHelper.styleButton(new JButton("Login"), UIStyleHelper.PRIMARY_COLOR);
         JButton signUpButton = UIStyleHelper.styleButton(new JButton("Create an Account"), UIStyleHelper.SECONDARY_COLOR);
-
+        usernameField.addActionListener(e -> passwordField.requestFocusInWindow());
+        passwordField.addActionListener(e -> loginButton.doClick());
         // Layout
         gbc.gridx = 0; gbc.gridy = 0; cardPanel.add(userLabel, gbc);
         gbc.gridx = 1; cardPanel.add(usernameField, gbc);

@@ -1,10 +1,7 @@
 package model;
 
-/**
- * 🚗 Ride model — Represents a single ride in the system.
- */
 public class Ride {
-    private int id;
+    private int rideId;
     private String driverId;
     private String driverName;
     private String fromLocation;
@@ -15,10 +12,10 @@ public class Ride {
     private int seatsAvailable;
     private String status;
 
-    public Ride() {}
-
-    public Ride(String driverId, String fromLocation, String toLocation, String date,
-                String time, String vehicleType, int seatsAvailable, String status) {
+    // === Constructor ===
+    public Ride(String driverId, String fromLocation, String toLocation,
+                String date, String time, String vehicleType,
+                int seatsAvailable, String status) {
         this.driverId = driverId;
         this.fromLocation = fromLocation;
         this.toLocation = toLocation;
@@ -29,12 +26,9 @@ public class Ride {
         this.status = status;
     }
 
-    // ✅ Getters & Setters
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
-
-    public int getRideId() { return id; } // Alias for compatibility
-    public void setRideId(int id) { this.id = id; }
+    // === Getters & Setters ===
+    public int getRideId() { return rideId; }
+    public void setRideId(int rideId) { this.rideId = rideId; }
 
     public String getDriverId() { return driverId; }
     public void setDriverId(String driverId) { this.driverId = driverId; }
@@ -62,10 +56,4 @@ public class Ride {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
-
-    @Override
-    public String toString() {
-        return String.format("%s → %s | %s %s | %s seats | %s",
-                fromLocation, toLocation, date, time, seatsAvailable, status);
-    }
 }

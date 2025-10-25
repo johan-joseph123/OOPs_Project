@@ -3,6 +3,7 @@ package controller;
 import dao.BookingDAO;
 import dao.RideDAO;
 import model.Booking;
+import model.Ride;
 import java.sql.SQLException;
 
 /**
@@ -28,8 +29,17 @@ public class BookingController {
 
         // Automatically close the ride if seats are full
         if (created) {
-            RideController rc = new RideController();
-            //rc.autoCloseIfFull(rideId);
+            Ride ride = rideDAO.findById(rideId);
+            int newSeats = ride.getSeatsAvailable() - 1;
+            ride.setSeatsAvailable(newSeats);
+            rideDAO.updateSeats(rideId, newSeats);
+            if (newSeats <= 0) {
+                rideDAO.updateRideStatus(rideId, "Accepted");
+                // Or "Full" if you add that status
+            } else {
+                ride.setSeatsAvailable(newSeats);
+                rideDAO.updateSeats(rideId, newSeats);
+            }
         }
 
         return created;

@@ -30,7 +30,7 @@ public class RideShareMobileUI extends JFrame {
     private String currentScreen = "login";
     private String currentUserId;
     private String currentUserRole;
-    private String currentUsername;  // ✅ New field
+    private String currentUsername;
     private boolean loggedIn = false;
 
     private final Stack<String> screenHistory = new Stack<>();
@@ -97,14 +97,18 @@ public class RideShareMobileUI extends JFrame {
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(this, "Error loading provider trips: " + e.getMessage());
             }
-        
-
         } else if ("driver_application".equals(name) && driverApplication != null) {
             driverApplication.checkExistingApplication(getCurrentUserId());
         }
 
         cardLayout.show(mainPanel, name);
         navBar.update(name);
+    }
+
+    // ✅ NEW: For dynamically created panels like ResultPanel
+    public void showScreen(String name, JPanel panel) {
+        mainPanel.add(panel, name);
+        showScreen(name);
     }
 
     // === Navigation ===
