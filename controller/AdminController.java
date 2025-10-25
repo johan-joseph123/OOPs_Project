@@ -9,11 +9,18 @@ import java.util.List;
 public class AdminController {
     private final DriverApplicationDAO dao = new DriverApplicationDAO();
 
+    /** ✅ Get only pending applications (existing feature) */
     public List<DriverApplication> getPendingApplications() throws SQLException {
-        return dao.getPendingApplications();
+        return dao.findByStatus("pending");
     }
 
-    public boolean updateApplicationStatus(String id, String status) throws SQLException {
-        return dao.updateStatus(id, status);
+    /** ✅ New method: Get ALL applications (approved + pending + rejected) */
+    public List<DriverApplication> getAllApplications() throws SQLException {
+        return dao.findAll();
+    }
+
+    /** ✅ Approve or reject a driver application */
+    public boolean updateApplicationStatus(String driverId, String status) throws SQLException {
+        return dao.updateStatus(driverId, status);
     }
 }

@@ -1,8 +1,8 @@
 package view;
 
 import controller.RideController;
-import dao.RideDAO;
 import model.Ride;
+import util.UIStyleHelper;
 
 import javax.swing.*;
 import java.awt.*;
@@ -11,91 +11,63 @@ import java.util.List;
 
 public class ProviderTripsPanel extends JPanel {
     private final RideShareMobileUI ui;
-    private final RideController rideController = new RideController();
-    private final JPanel tripListPanel;
+    private final RideController controller = new RideController();
+    private final JPanel tripList;
 
     public ProviderTripsPanel(RideShareMobileUI ui) {
         this.ui = ui;
         setLayout(new BorderLayout());
-        setBackground(new Color(240, 245, 255));
+        setBackground(UIStyleHelper.BG_COLOR);
 
-        JLabel title = new JLabel("Offered Rides", SwingConstants.CENTER);
-        title.setFont(new Font("Segoe UI", Font.BOLD, 22));
-        title.setBorder(BorderFactory.createEmptyBorder(12, 0, 12, 0));
+        JLabel title = UIStyleHelper.createTitle("🚗 Your Offered Rides");
         add(title, BorderLayout.NORTH);
 
-        tripListPanel = new JPanel();
-        tripListPanel.setLayout(new BoxLayout(tripListPanel, BoxLayout.Y_AXIS));
-        tripListPanel.setBackground(new Color(240, 245, 255));
-        tripListPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        tripList = new JPanel();
+        tripList.setLayout(new BoxLayout(tripList, BoxLayout.Y_AXIS));
+        tripList.setBackground(Color.WHITE);
 
-        JScrollPane scroll = new JScrollPane(tripListPanel);
-        scroll.setBorder(null);
-        add(scroll, BorderLayout.CENTER);
+        add(new JScrollPane(tripList), BorderLayout.CENTER);
     }
 
-    /** ✅ Refresh data when screen shown */
-    public void refreshData() {
-        tripListPanel.removeAll();
-        String driverId = ui.getCurrentUserId();
-
-        if (driverId == null) {
-            tripListPanel.add(new JLabel("Please log in as a driver."));
-            refresh();
-            return;
-        }
-
+    public void refreshData() throws SQLException {
+        tripList.removeAll();
         try {
-            List<Ride> rides = rideController.getProviderRides(driverId);
+            List<Ride> rides = controller.getProviderRides(ui.getCurrentUserId());
             if (rides.isEmpty()) {
-                tripListPanel.add(new JLabel("You haven’t offered any rides yet."));
+                tripList.add(UIStyleHelper.createInfoLabel("You haven’t offered any rides yet."));
             } else {
                 for (Ride r : rides) {
-                    tripListPanel.add(createRideCard(r));
-                    tripListPanel.add(Box.createVerticalStrut(10));
+                    tripList.add(createCard(r));
+                    tripList.add(Box.createVerticalStrut(8));
                 }
             }
         } catch (SQLException e) {
-            tripListPanel.add(new JLabel("Database error: " + e.getMessage()));
+            tripList.add(UIStyleHelper.createInfoLabel("Error: " + e.getMessage()));
         }
-
-        refresh();
+        revalidate();
+        repaint();
     }
 
-    private JPanel createRideCard(Ride r) {
-        JPanel card = new JPanel(new BorderLayout());
-        card.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(210, 220, 255), 1),
-                BorderFactory.createEmptyBorder(10, 10, 10, 10)
-        ));
-        card.setBackground(Color.WHITE);
 
+    private JPanel createCard(Ride r) {
+        JPanel card = UIStyleHelper.createContentPanel("");
         JLabel info = new JLabel("<html><b>" + r.getFromLocation() + " → " + r.getToLocation() +
                 "</b><br/>" + r.getDate() + " " + r.getTime() +
                 " • Status: " + r.getStatus() + "</html>");
-        card.add(info, BorderLayout.CENTER);
+        info.setFont(UIStyleHelper.TEXT_FONT);
 
-        JButton completeBtn = new JButton("Mark Completed");
-        completeBtn.addActionListener(e -> {
+        JButton done = UIStyleHelper.styleButton(new JButton("Mark Completed"), UIStyleHelper.SUCCESS_COLOR);
+        done.addActionListener(e -> {
             try {
-                if (rideController.markRideCompleted(r.getRideId())) {
-                    JOptionPane.showMessageDialog(this, "Ride marked as completed!");
-                    refreshData();
-                }
+                //controller.markRideCompleted(r.getRideId());
+                refreshData();
             } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage());
+                JOptionPane.showMessageDialog(this, ex.getMessage());
             }
         });
 
-        JPanel right = new JPanel(new BorderLayout());
-        right.setOpaque(false);
-        right.add(completeBtn, BorderLayout.CENTER);
-        card.add(right, BorderLayout.EAST);
+        card.add(info, BorderLayout.CENTER);
+        card.add(done, BorderLayout.EAST);
         return card;
-    }
-
-    private void refresh() {
-        revalidate();
-        repaint();
     }
 }
