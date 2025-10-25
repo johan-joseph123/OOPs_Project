@@ -20,7 +20,6 @@ import view.NavigationBarPanel;
 
 /**
  * 🧭 Main UI Frame for Campus RideShare MVC
- * Handles navigation, login/logout states, and dynamic navbar greetings.
  */
 public class RideShareMobileUI extends JFrame {
     private final CardLayout cardLayout;
@@ -62,7 +61,7 @@ public class RideShareMobileUI extends JFrame {
         riderTrips = new RiderTripsPanel(this);
         providerTrips = new ProviderTripsPanel(this);
 
-        // === Add to layout ===
+        // === Add Panels to Layout ===
         mainPanel.add(login, "login");
         mainPanel.add(signupChoice, "signup_choice");
         mainPanel.add(driverApplication, "driver_application");
@@ -119,7 +118,7 @@ public class RideShareMobileUI extends JFrame {
         }
     }
 
-    // === Logout: Reset Session ===
+    // === Logout ===
     public void resetUserSession() {
         currentUserId = null;
         currentUserRole = null;
@@ -143,34 +142,14 @@ public class RideShareMobileUI extends JFrame {
     }
 
     // === Getters & Setters ===
-    public String getCurrentUserId() {
-        return currentUserId;
-    }
+    public String getCurrentUserId() { return currentUserId; }
+    public void setCurrentUserId(String id) { this.currentUserId = id; }
+    public String getCurrentUserRole() { return currentUserRole; }
+    public void setCurrentUserRole(String role) { this.currentUserRole = role; }
+    public String getCurrentUsername() { return currentUsername; }
+    public void setCurrentUsername(String username) { this.currentUsername = username; }
 
-    public void setCurrentUserId(String id) {
-        this.currentUserId = id;
-    }
-
-    public String getCurrentUserRole() {
-        return currentUserRole;
-    }
-
-    public void setCurrentUserRole(String role) {
-        this.currentUserRole = role;
-    }
-
-    public String getCurrentUsername() {
-        return currentUsername;
-    }
-
-    public void setCurrentUsername(String username) {
-        this.currentUsername = username;
-    }
-
-    public boolean isLoggedIn() {
-        return loggedIn;
-    }
-
+    public boolean isLoggedIn() { return loggedIn; }
     public void setLoggedIn(boolean loggedIn) {
         this.loggedIn = loggedIn;
         navBar.setLoggedIn(loggedIn);
