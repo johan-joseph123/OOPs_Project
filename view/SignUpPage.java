@@ -44,6 +44,13 @@ public class SignUpPage extends JPanel {
         // ✅ Style Buttons
         UIStyleHelper.styleButton(signUpBtn, UIStyleHelper.SUCCESS_COLOR);
         UIStyleHelper.styleButton(backBtn, UIStyleHelper.PRIMARY_COLOR);
+        nameField.addActionListener(e -> unameField.requestFocusInWindow());
+        unameField.addActionListener(e -> passField.requestFocusInWindow());
+        passField.addActionListener(e -> roleBox.requestFocusInWindow());
+
+        // When Enter pressed in role dropdown → Click Sign Up
+        roleBox.addActionListener(e -> signUpBtn.doClick());
+
 
         // --- Add components ---
         gbc.gridx = 0; gbc.gridy = 0; form.add(nameLabel, gbc);

@@ -20,7 +20,6 @@ import view.NavigationBarPanel;
 
 /**
  * 🧭 Main UI Frame for Campus RideShare MVC
- * Handles navigation, login/logout states, and dynamic navbar greetings.
  */
 public class RideShareMobileUI extends JFrame {
     private final CardLayout cardLayout;
@@ -30,7 +29,7 @@ public class RideShareMobileUI extends JFrame {
     private String currentScreen = "login";
     private String currentUserId;
     private String currentUserRole;
-    private String currentUsername;  // ✅ New field
+    private String currentUsername;
     private boolean loggedIn = false;
 
     private final Stack<String> screenHistory = new Stack<>();
@@ -62,7 +61,7 @@ public class RideShareMobileUI extends JFrame {
         riderTrips = new RiderTripsPanel(this);
         providerTrips = new ProviderTripsPanel(this);
 
-        // === Add to layout ===
+        // === Add Panels to Layout ===
         mainPanel.add(login, "login");
         mainPanel.add(signupChoice, "signup_choice");
         mainPanel.add(driverApplication, "driver_application");
@@ -92,16 +91,8 @@ public class RideShareMobileUI extends JFrame {
         if ("riderTrips".equals(name) && riderTrips != null) {
             riderTrips.refreshData();
         } else if ("providerTrips".equals(name) && providerTrips != null) {
-            try {
-                providerTrips.refreshData();
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, "Error loading provider trips: " + e.getMessage());
-            }
-        
-
-        } else if ("driver_application".equals(name) && driverApplication != null) {
-            driverApplication.checkExistingApplication(getCurrentUserId());
-        }
+            providerTrips.refreshRides();
+        } 
 
         cardLayout.show(mainPanel, name);
         navBar.update(name);
@@ -115,7 +106,7 @@ public class RideShareMobileUI extends JFrame {
         }
     }
 
-    // === Logout: Reset Session ===
+    // === Logout ===
     public void resetUserSession() {
         currentUserId = null;
         currentUserRole = null;
@@ -139,34 +130,14 @@ public class RideShareMobileUI extends JFrame {
     }
 
     // === Getters & Setters ===
-    public String getCurrentUserId() {
-        return currentUserId;
-    }
+    public String getCurrentUserId() { return currentUserId; }
+    public void setCurrentUserId(String id) { this.currentUserId = id; }
+    public String getCurrentUserRole() { return currentUserRole; }
+    public void setCurrentUserRole(String role) { this.currentUserRole = role; }
+    public String getCurrentUsername() { return currentUsername; }
+    public void setCurrentUsername(String username) { this.currentUsername = username; }
 
-    public void setCurrentUserId(String id) {
-        this.currentUserId = id;
-    }
-
-    public String getCurrentUserRole() {
-        return currentUserRole;
-    }
-
-    public void setCurrentUserRole(String role) {
-        this.currentUserRole = role;
-    }
-
-    public String getCurrentUsername() {
-        return currentUsername;
-    }
-
-    public void setCurrentUsername(String username) {
-        this.currentUsername = username;
-    }
-
-    public boolean isLoggedIn() {
-        return loggedIn;
-    }
-
+    public boolean isLoggedIn() { return loggedIn; }
     public void setLoggedIn(boolean loggedIn) {
         this.loggedIn = loggedIn;
         navBar.setLoggedIn(loggedIn);

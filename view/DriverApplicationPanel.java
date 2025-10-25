@@ -80,6 +80,12 @@ public class DriverApplicationPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = row; gbc.gridwidth = 2; formPanel.add(statusLabel, gbc);
 
         add(formPanel, BorderLayout.CENTER);
+        idField.addActionListener(e -> nameField.requestFocusInWindow());
+        nameField.addActionListener(e -> vehicleField.requestFocusInWindow());
+        vehicleField.addActionListener(e -> licenseField.requestFocusInWindow());
+        licenseField.addActionListener(e -> passwordField.requestFocusInWindow());
+        // Pressing Enter in password field will submit
+        passwordField.addActionListener(e -> submitApplication());
 
         uploadButton.addActionListener(e -> {
             JFileChooser chooser = new JFileChooser();

@@ -54,13 +54,13 @@ public class NavigationBarPanel extends JPanel {
                 return;
             }
 
-            int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to log out?",
+            int confirm = JOptionPane.showConfirmDialog(ui, "Are you sure you want to log out?",
                     "Confirm Logout", JOptionPane.YES_NO_OPTION);
 
             if (confirm == JOptionPane.YES_OPTION) {
                 ui.resetUserSession();
                 setGuestMode();
-                JOptionPane.showMessageDialog(this, "🚪 Logged out successfully!");
+                JOptionPane.showMessageDialog(ui, "🚪 Logged out successfully!");
             }
         });
 

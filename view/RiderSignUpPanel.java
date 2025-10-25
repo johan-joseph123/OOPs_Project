@@ -40,6 +40,10 @@ public class RiderSignUpPanel extends JPanel {
 
         UIStyleHelper.styleButton(registerBtn, UIStyleHelper.SUCCESS_COLOR);
         UIStyleHelper.styleButton(backBtn, UIStyleHelper.PRIMARY_COLOR);
+        usernameField.addActionListener(e -> admissionField.requestFocusInWindow());
+        admissionField.addActionListener(e -> passwordField.requestFocusInWindow());
+        passwordField.addActionListener(e -> confirmPasswordField.requestFocusInWindow());
+        confirmPasswordField.addActionListener(e -> registerBtn.doClick());
 
         int y = 0;
         addRow(form, gbc, y++, "Username:", usernameField);
