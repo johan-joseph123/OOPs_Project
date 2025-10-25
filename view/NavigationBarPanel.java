@@ -50,7 +50,7 @@ public class NavigationBarPanel extends JPanel {
 
         logoutBtn.addActionListener(e -> {
             if (!ui.isLoggedIn()) {
-                JOptionPane.showMessageDialog(this, "⚠️ You are not logged in!", "Logout Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(ui, "⚠️ You are not logged in!", "Logout Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
@@ -60,7 +60,7 @@ public class NavigationBarPanel extends JPanel {
             if (confirm == JOptionPane.YES_OPTION) {
                 ui.resetUserSession();
                 setGuestMode();
-                JOptionPane.showMessageDialog(ui, "🚪 Logged out successfully!");
+                //JOptionPane.showMessageDialog(this, "🚪 Logged out successfully!");
             }
         });
 

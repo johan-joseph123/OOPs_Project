@@ -44,7 +44,8 @@ public class RiderTripsPanel extends JPanel {
                 tripList.add(UIStyleHelper.createInfoLabel("No rides booked yet."));
             } else {
                 for (Booking b : bookings) {
-                    Ride r = rideDAO.findById(b.getRideId());
+                	Ride r = rideDAO.findById((int) b.getRideId());
+
                     tripList.add(createCard(b, r));
                     tripList.add(Box.createVerticalStrut(8));
                 }

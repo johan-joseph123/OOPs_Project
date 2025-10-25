@@ -91,11 +91,23 @@ public class RideShareMobileUI extends JFrame {
         if ("riderTrips".equals(name) && riderTrips != null) {
             riderTrips.refreshData();
         } else if ("providerTrips".equals(name) && providerTrips != null) {
-            providerTrips.refreshRides();
-        } 
+            try {
+                providerTrips.refreshData();
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Error loading provider trips: " + e.getMessage());
+            }
+        } else if ("driver_application".equals(name) && driverApplication != null) {
+            driverApplication.checkExistingApplication(getCurrentUserId());
+        }
 
         cardLayout.show(mainPanel, name);
         navBar.update(name);
+    }
+
+    // ✅ NEW: For dynamically created panels like ResultPanel
+    public void showScreen(String name, JPanel panel) {
+        mainPanel.add(panel, name);
+        showScreen(name);
     }
 
     // === Navigation ===

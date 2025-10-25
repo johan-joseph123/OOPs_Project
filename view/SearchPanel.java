@@ -1,80 +1,63 @@
 package view;
 
-import controller.BookingController;
-import dao.RideDAO;
-import model.Ride;
 import util.UIStyleHelper;
-
 import javax.swing.*;
 import java.awt.*;
-import java.sql.SQLException;
-import java.util.List;
+import java.time.LocalDate;
 
 public class SearchPanel extends JPanel {
     private final RideShareMobileUI ui;
-    private final RideDAO rideDAO = new RideDAO();
-    private final BookingController bookingController = new BookingController();
-    private final JPanel resultsPanel;
+    private final JComboBox<String> toField;
+    private final JTextField dateField;
 
     public SearchPanel(RideShareMobileUI ui) {
         this.ui = ui;
         setLayout(new BorderLayout());
         setBackground(UIStyleHelper.BG_COLOR);
 
-        JLabel title = UIStyleHelper.createTitle("🔍 Available Rides");
+        JLabel title = UIStyleHelper.createTitle("🔍 Search Rides");
         add(title, BorderLayout.NORTH);
 
-        resultsPanel = new JPanel();
-        resultsPanel.setLayout(new BoxLayout(resultsPanel, BoxLayout.Y_AXIS));
-        resultsPanel.setBackground(Color.WHITE);
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        formPanel.setBackground(Color.WHITE);
+        formPanel.setBorder(BorderFactory.createEmptyBorder(40, 60, 40, 60));
 
-        add(new JScrollPane(resultsPanel), BorderLayout.CENTER);
-        loadAllRides();
-    }
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(15, 15, 15, 15);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
 
-    private void loadAllRides() {
-        resultsPanel.removeAll();
-        try {
-            List<Ride> rides = rideDAO.findAllOpenRides();
-            if (rides.isEmpty()) {
-                resultsPanel.add(UIStyleHelper.createInfoLabel("No available rides right now."));
-            } else {
-                for (Ride r : rides) {
-                    resultsPanel.add(createRideCard(r));
-                    resultsPanel.add(Box.createVerticalStrut(8));
-                }
-            }
-        } catch (SQLException e) {
-            resultsPanel.add(UIStyleHelper.createInfoLabel("Error: " + e.getMessage()));
-        }
-        revalidate();
-        repaint();
-    }
-
-    private JPanel createRideCard(Ride r) {
-        JPanel card = UIStyleHelper.createContentPanel("");
-        JLabel info = new JLabel("<html><b>" + r.getDriverName() + "</b> — " + r.getFromLocation() + " → " +
-                r.getToLocation() + "<br/>" + r.getDate() + " " + r.getTime() +
-                " • Vehicle: " + r.getVehicleType() + "</html>");
-        info.setFont(UIStyleHelper.TEXT_FONT);
-
-        JButton book = UIStyleHelper.styleButton(new JButton("Book Ride"), UIStyleHelper.PRIMARY_COLOR);
-        book.addActionListener(e -> {
-            try {
-                if (!ui.isLoggedIn() || !"rider".equals(ui.getCurrentUserRole())) {
-                    JOptionPane.showMessageDialog(this, "Please login as a rider.");
-                    return;
-                }
-                bookingController.bookSeat(r.getRideId(), ui.getCurrentUserId());
-                JOptionPane.showMessageDialog(this, "Ride booked successfully!");
-                ui.showScreen("riderTrips");
-            } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(this, ex.getMessage());
-            }
+        toField = new JComboBox<>(new String[]{
+                "Pala", "Pravithanam", "Kottayam RS", "Erattupetta", "Ponkunnam", "Thodupuzha"
         });
 
-        card.add(info, BorderLayout.CENTER);
-        card.add(book, BorderLayout.EAST);
-        return card;
+        dateField = new JTextField(LocalDate.now().toString());
+
+        JButton searchButton = UIStyleHelper.styleButton(new JButton("🔎 Search Rides"), UIStyleHelper.PRIMARY_COLOR);
+        searchButton.addActionListener(e -> openResults());
+
+        int row = 0;
+        gbc.gridx = 0; gbc.gridy = row; formPanel.add(new JLabel("Destination:"), gbc);
+        gbc.gridx = 1; formPanel.add(toField, gbc);
+        row++;
+        gbc.gridx = 0; gbc.gridy = row; formPanel.add(new JLabel("Date (YYYY-MM-DD):"), gbc);
+        gbc.gridx = 1; formPanel.add(dateField, gbc);
+        row++;
+        gbc.gridx = 1; gbc.gridy = row; gbc.insets = new Insets(30, 15, 15, 15);
+        formPanel.add(searchButton, gbc);
+
+        add(formPanel, BorderLayout.CENTER);
+    }
+
+    private void openResults() {
+        String to = (String) toField.getSelectedItem();
+        String date = dateField.getText().trim();
+
+        if (to == null || to.isEmpty() || date.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please select both destination and date.");
+            return;
+        }
+
+        // ✅ Dynamically show ResultPanel
+        ui.showScreen("results", new ResultPanel(ui, to, date));
     }
 }
